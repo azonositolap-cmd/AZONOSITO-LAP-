@@ -2,19 +2,18 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const multer = require("multer");
+const PDFDocument = require("pdfkit");
 const { Resend } = require("resend");
 
 const app = express();
 const upload = multer();
 
-// 🔴 A RESEND API KULCSOT NEM IDE ÍRJUK BE!
-// Railway → Variables → RESEND_API_KEY
+// 🔐 Railway-ben környezeti változó lesz
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 app.use(cors());
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(__dirname));
 
-// HTML kiszolgálása
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
@@ -25,8 +24,8 @@ app.get("/test-email", async (req, res) => {
     await resend.emails.send({
       from: "Azonosító lap <no-reply@resend.dev>",
       to: ["azonisitolap@gmail.com"],
-      subject: "Resend teszt email",
-      text: "Ha ezt megkaptad, a Resend működik."
+      subject: "Teszt email",
+      text: "Ha ezt megkaptad, az email küldés működik."
     });
 
     res.send("Teszt email elküldve");
@@ -36,33 +35,44 @@ app.get("/test-email", async (req, res) => {
   }
 });
 
-// 🔹 PDF FOGADÁS + EMAIL
+// 🔹 ŰRLAP → PDF → EMAIL
 app.post("/send-pdf", upload.any(), async (req, res) => {
   try {
     const { ugyfelEmail, gazdaNev = "", cim = "" } = req.body;
-    const pdfFile = req.files?.[0];
 
-    if (!ugyfelEmail || !pdfFile) {
-      return res.status(400).send("Hiányzó adat");
+    if (!ugyfelEmail) {
+      return res.status(400).send("Hiányzó email cím");
     }
 
-    await resend.emails.send({
-      from: "Azonosító lap <no-reply@resend.dev>",
-      to: [ugyfelEmail, "azonisitolap@gmail.com"],
-      subject: "Azonosító lap",
-      text: `Csatolva küldjük az azonosító lapot.
+    const doc = new PDFDocument({ size: "A4", margin: 40 });
+    const buffers = [];
+    doc.on("data", buffers.push.bind(buffers));
 
-Gazda neve: ${gazdaNev}
-Cím: ${cim}`,
-      attachments: [
-        {
-          filename: pdfFile.originalname,
-          content: pdfFile.buffer.toString("base64")
-        }
-      ]
+    doc.on("end", async () => {
+      const pdfBuffer = Buffer.concat(buffers);
+
+      await resend.emails.send({
+        from: "Azonosító lap <no-reply@resend.dev>",
+        to: [ugyfelEmail, "azonisitolap@gmail.com"],
+        subject: "Azonosító lap",
+        text: "Csatolva küldjük az azonosító lapot.",
+        attachments: [
+          {
+            filename: "azonosito_lap.pdf",
+            content: pdfBuffer.toString("base64")
+          }
+        ]
+      });
+
+      res.send("Email elküldve");
     });
 
-    res.send("Email elküldve");
+    doc.fontSize(18).text("AZONOSÍTÓ LAP", { align: "center" });
+    doc.moveDown();
+    doc.text(`Gazda neve: ${gazdaNev}`);
+    doc.text(`Cím: ${cim}`);
+    doc.end();
+
   } catch (err) {
     console.error(err);
     res.status(500).send("Szerver hiba");
@@ -71,5 +81,5 @@ Cím: ${cim}`,
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("Szerver fut a porton:", PORT);
+  console.log("Szerver fut:", PORT);
 });
