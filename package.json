@@ -2,15 +2,13 @@
   "name": "azonositolap-cmd",
   "version": "1.0.0",
   "main": "server.js",
-  "type": "commonjs",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
+    "express": "^5.0.0",
     "cors": "^2.8.5",
-    "express": "^5.2.1",
     "multer": "^2.0.2",
-    "pdfkit": "^0.17.2",
     "resend": "^6.6.0"
   }
 }
