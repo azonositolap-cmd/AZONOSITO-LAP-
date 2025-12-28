@@ -54,7 +54,8 @@ app.post("/send-pdf", upload.any(), async (req, res) => {
 });
 
 // 🔴 EZ A LÉNYEG
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("Szerver fut:", PORT);
+  console.log("Szerver fut a porton:", PORT);
+});
 });
