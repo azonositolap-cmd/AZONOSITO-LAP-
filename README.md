@@ -7,4 +7,5 @@ npm install
 npm start
 
 ## Környezeti változók
-RESEND_API_KEY szükséges
+re_gXc9QMf4_8r5L3SepKgTFkeUj8JBro6nQ
+
