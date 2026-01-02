@@ -2,12 +2,12 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const multer = require("multer");
+const PDFDocument = require("pdfkit");
 const { Resend } = require("resend");
 
 const app = express();
 const upload = multer();
 
-// 🔴 CSAK IDE kell az API KEY (Railway ENV-ben is!)
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 app.use(cors());
@@ -17,45 +17,56 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// TESZT EMAIL
 app.get("/test-email", async (req, res) => {
   try {
     await resend.emails.send({
       from: "Azonosító lap <no-reply@resend.dev>",
       to: ["azonisitolap@gmail.com"],
       subject: "Teszt email",
-      text: "Ha ezt megkaptad, működik a Railway + Resend."
+      text: "Ez egy teszt email Render + Resend alól."
     });
+
     res.send("Teszt email elküldve");
   } catch (e) {
     console.error(e);
-    res.status(500).send("Email hiba");
+    res.status(500).send("Hiba email küldéskor");
   }
 });
 
-// PDF NÉLKÜL, csak email (most ez stabil)
-app.post("/send-pdf", upload.any(), async (req, res) => {
-  try {
-    const { ugyfelEmail } = req.body;
-    if (!ugyfelEmail) return res.status(400).send("Nincs email");
+app.post("/send-pdf", upload.none(), async (req, res) => {
+  const { ugyfelEmail, gazdaNev = "", cim = "" } = req.body;
+
+  if (!ugyfelEmail) {
+    return res.status(400).send("Nincs email");
+  }
+
+  const doc = new PDFDocument();
+  const buffers = [];
+  doc.on("data", buffers.push.bind(buffers));
+  doc.on("end", async () => {
+    const pdf = Buffer.concat(buffers);
 
     await resend.emails.send({
       from: "Azonosító lap <no-reply@resend.dev>",
       to: [ugyfelEmail, "azonisitolap@gmail.com"],
       subject: "Azonosító lap",
-      text: "Az űrlap sikeresen elküldve."
+      text: "Csatolva az azonosító lap.",
+      attachments: [
+        {
+          filename: "azonosito-lap.pdf",
+          content: pdf.toString("base64")
+        }
+      ]
     });
 
-    res.send("Email elküldve");
-  } catch (e) {
-    console.error(e);
-    res.status(500).send("Szerver hiba");
-  }
+    res.send("PDF elküldve");
+  });
+
+  doc.text("AZONOSÍTÓ LAP");
+  doc.text(`Gazda: ${gazdaNev}`);
+  doc.text(`Cím: ${cim}`);
+  doc.end();
 });
 
-// 🔴 EZ A LÉNYEG
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log("Szerver fut a porton:", PORT);
-});
-});
+app.listen(PORT, () => console.log("Szerver fut:", PORT));
