@@ -8,94 +8,96 @@
 <style>
 * { box-sizing: border-box; }
 
-html, body {
-  width: 210mm;
-  margin: 0;
-  padding: 0;
-  background: #f5f5f5;
+body {
   font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  padding: 20px;
 }
 
 .container {
-  width: 210mm;
-  min-height: 297mm;
   background: #fff;
+  width: 210mm;
   margin: auto;
-  padding: 20mm;
+  padding: 30px;
   border: 1px solid #ccc;
 }
 
 h2 {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 
 .top-info {
   display: flex;
   justify-content: space-between;
+  margin-bottom: 25px;
   font-weight: bold;
-  margin-bottom: 20px;
 }
 
 label {
   font-weight: bold;
   display: block;
-  margin-top: 14px;
+  margin-top: 18px;
 }
 
 input, select, textarea, canvas {
   width: 100%;
-  margin-top: 5px;
-  padding: 8px;
-  font-size: 14px;
+  margin-top: 6px;
+}
+
+input, select, textarea {
+  padding: 10px;
+  font-size: 15px;
 }
 
 textarea {
-  min-height: 80px;
+  min-height: 90px;
 }
 
 .row {
   display: flex;
-  gap: 15px;
+  gap: 20px;
 }
 
 .row > div {
   flex: 1;
 }
 
+canvas {
+  border: 1px solid #000;
+  height: 150px;
+  background: #fff;
+}
+
 .checkbox {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-top: 10px;
+  padding-bottom: 6px;
   border-bottom: 1px dotted #ccc;
-  margin-top: 8px;
-  padding-bottom: 4px;
+}
+
+.checkbox span {
+  flex: 1;
+  padding-right: 15px;
 }
 
 .checkbox input {
-  width: 20px;
-  height: 20px;
-}
-
-canvas {
-  height: 120px;
-  border: 1px solid #000;
+  width: 22px;
+  height: 22px;
 }
 
 button {
-  margin-top: 20px;
+  margin-top: 30px;
   padding: 14px;
-  font-size: 16px;
   width: 100%;
+  font-size: 16px;
+  cursor: pointer;
 }
 
 label, input, textarea, .row, .checkbox {
   page-break-inside: avoid;
-}
-
-@media print {
-  body { background: #fff; }
-  .container { border: none; }
 }
 </style>
 
@@ -103,7 +105,6 @@ label, input, textarea, .row, .checkbox {
 </head>
 
 <body>
-
 <div class="container" id="doc">
 
 <h2>Azonosító lap</h2>
@@ -164,9 +165,9 @@ label, input, textarea, .row, .checkbox {
   </div>
 </div>
 
-<label>Található-e implantátum?</label>
-<div class="checkbox"><span>Igen</span><input type="checkbox"></div>
-<div class="checkbox"><span>Nem</span><input type="checkbox"></div>
+<label>Található-e implantátum (chipen kívül, fém, orvosi eszköz)?</label>
+<div class="checkbox"><span>Igen</span><input type="checkbox" class="implant"></div>
+<div class="checkbox"><span>Nem</span><input type="checkbox" class="implant"></div>
 
 <label>Milyen urna?</label>
 <input type="text">
@@ -179,7 +180,26 @@ label, input, textarea, .row, .checkbox {
 
 <label>Fizetés módja</label>
 <div class="checkbox"><span>Készpénz</span><input type="checkbox"></div>
-<div class="checkbox"><span>Átutalás</span><input type="checkbox"></div>
+<div class="checkbox"><span>Átutalás (egy összegben)</span><input type="checkbox"></div>
+
+<label>Elszállításnál fizetett összeg (Ft)</label>
+<input type="number">
+
+<label>Visszaszállításnál fizetendő összeg (Ft)</label>
+<input type="number">
+
+<div class="checkbox">
+  <span>A kisállattal együtt átvett pokróc, nyakörv stb. megsemmisítésre kerül.</span>
+  <input type="checkbox">
+</div>
+
+<div class="checkbox">
+  <span>Hozzájárulok személyes adataim kezeléséhez</span>
+  <input type="checkbox" required>
+</div>
+
+<label>Hol találta hirdetésünket?</label>
+<input type="text">
 
 <label>Megjegyzés</label>
 <textarea></textarea>
@@ -188,7 +208,7 @@ label, input, textarea, .row, .checkbox {
 <canvas id="signUser"></canvas>
 
 <label>Ügyfél email címe</label>
-<input type="email" id="ugyfelEmail">
+<input type="email" id="ugyfelEmail" required>
 
 <button id="pdfBtn">PDF készítés és küldés</button>
 
@@ -202,37 +222,50 @@ let c = localStorage.getItem("erk") || 0;
 localStorage.setItem("erk", ++c);
 erkszam.innerText = `${ds}-${String(c).padStart(4,"0")}`;
 
-allatFajta.onchange = e => {
-  egyebAllat.style.display = e.target.value === "Egyéb" ? "block" : "none";
-};
+allatFajta.onchange = e =>
+  egyebAllat.style.display = e.target.value==="Egyéb" ? "block" : "none";
+
+document.querySelectorAll(".implant").forEach(cb=>{
+  cb.onchange = ()=>document.querySelectorAll(".implant").forEach(o=>{
+    if(o!==cb) o.checked=false;
+  });
+});
 
 const canvas = document.getElementById("signUser");
 const ctx = canvas.getContext("2d");
 canvas.width = canvas.offsetWidth;
-canvas.height = 120;
-let draw = false;
+canvas.height = 150;
+let draw=false;
 
 function pos(e){
-  const r = canvas.getBoundingClientRect();
+  const r=canvas.getBoundingClientRect();
   return e.touches
     ? {x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top}
     : {x:e.clientX-r.left,y:e.clientY-r.top};
 }
 
-["mousedown","touchstart"].forEach(ev => canvas.addEventListener(ev,e=>{
+["mousedown","touchstart"].forEach(ev=>canvas.addEventListener(ev,e=>{
   draw=true; const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y);
 }));
-["mousemove","touchmove"].forEach(ev => canvas.addEventListener(ev,e=>{
-  if(!draw) return; const p=pos(e);
+["mousemove","touchmove"].forEach(ev=>canvas.addEventListener(ev,e=>{
+  if(!draw)return; const p=pos(e);
   ctx.lineWidth=2; ctx.lineCap="round";
   ctx.lineTo(p.x,p.y); ctx.stroke();
 }));
-["mouseup","touchend","mouseleave"].forEach(ev => canvas.addEventListener(ev,()=>{
+["mouseup","touchend","mouseleave"].forEach(ev=>canvas.addEventListener(ev,()=>{
   draw=false; ctx.beginPath();
 }));
 
+function clean(str){
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/gi,"_");
+}
+
 pdfBtn.onclick = async () => {
-  const opt = {
+  if(!ugyfelEmail.value) return alert("Email kötelező");
+
+  const fileName = `${ds}_${clean(cim.value || "cim_nelkul")}.pdf`;
+
+  const pdfBlob = await html2pdf().from(doc).set({
     margin: 0,
     image: { type: 'jpeg', quality: 1 },
     html2canvas: {
@@ -248,10 +281,17 @@ pdfBtn.onclick = async () => {
       orientation: 'portrait'
     },
     pagebreak: { mode: ['css','legacy'] }
-  };
+  }).outputPdf("blob");
 
-  const blob = await html2pdf().set(opt).from(doc).outputPdf("blob");
-  console.log("PDF kész:", blob);
+  const fd = new FormData();
+  fd.append("pdf", pdfBlob, fileName);
+  fd.append("ugyfelEmail", ugyfelEmail.value);
+  fd.append("gazdaNev", gazdaNev.value);
+  fd.append("cim", cim.value);
+
+  await fetch("/send-pdf", { method:"POST", body: fd });
+
+  alert("PDF elküldve emailben");
 };
 </script>
 
