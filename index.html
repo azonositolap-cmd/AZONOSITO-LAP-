@@ -16,7 +16,7 @@ body {
 
 .container {
   background: #fff;
-  max-width: 900px;
+  width: 210mm;
   margin: auto;
   padding: 30px;
   border: 1px solid #ccc;
@@ -88,16 +88,17 @@ canvas {
   height: 22px;
 }
 
-.signature-block {
-  margin-top: 20px;
-}
-
 button {
   margin-top: 30px;
   padding: 14px;
   width: 100%;
   font-size: 16px;
   cursor: pointer;
+}
+
+@media print {
+  body { background: #fff; }
+  .container { border: none; }
 }
 </style>
 
@@ -166,14 +167,8 @@ button {
 </div>
 
 <label>Található-e implantátum (chipen kívül, fém, orvosi eszköz)?</label>
-<div class="checkbox">
-  <span>Igen</span>
-  <input type="checkbox" class="implant">
-</div>
-<div class="checkbox">
-  <span>Nem</span>
-  <input type="checkbox" class="implant">
-</div>
+<div class="checkbox"><span>Igen</span><input type="checkbox" class="implant"></div>
+<div class="checkbox"><span>Nem</span><input type="checkbox" class="implant"></div>
 
 <label>Milyen urna?</label>
 <input type="text">
@@ -185,14 +180,8 @@ button {
 </select>
 
 <label>Fizetés módja</label>
-<div class="checkbox">
-  <span>Készpénz</span>
-  <input type="checkbox">
-</div>
-<div class="checkbox">
-  <span>Átutalás (egy összegben)</span>
-  <input type="checkbox">
-</div>
+<div class="checkbox"><span>Készpénz</span><input type="checkbox"></div>
+<div class="checkbox"><span>Átutalás (egy összegben)</span><input type="checkbox"></div>
 
 <label>Elszállításnál fizetett összeg (Ft)</label>
 <input type="number">
@@ -276,11 +265,22 @@ pdfBtn.onclick = async () => {
 
   const fileName = `${ds}_${clean(cim.value || "cim_nelkul")}.pdf`;
 
-  const pdfBlob = await html2pdf().from(doc).set({
-    margin:10,
-    html2canvas:{ scale: window.innerWidth<768?0.65:0.85 },
-    jsPDF:{ unit:"mm", format:"a4", orientation:"portrait" }
-  }).outputPdf("blob");
+  const opt = {
+    margin: 10,
+    filename: fileName,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: {
+      scale: 2,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: doc.scrollWidth,
+      windowHeight: doc.scrollHeight
+    },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['css','legacy'] }
+  };
+
+  const pdfBlob = await html2pdf().set(opt).from(doc).outputPdf("blob");
 
   const fd = new FormData();
   fd.append("pdf", pdfBlob, fileName);
