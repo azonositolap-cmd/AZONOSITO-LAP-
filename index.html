@@ -63,15 +63,27 @@ textarea {
   flex: 1;
 }
 
-.checkbox-row {
+/* ✅ CHECKBOX SOR – SZÖVEG BAL, DOBOZ JOBB */
+.checkline {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 10px;
   margin-top: 8px;
+  gap: 15px;
 }
 
-.checkbox-row input {
+.checkline span {
+  flex: 1;
+}
+
+.checkline input[type="checkbox"] {
   transform: scale(1.2);
+  width: auto;
+}
+
+/* ✅ PDF ELTOLÁSOK */
+.pdf-gap-30 {
+  margin-top: 30px;
 }
 
 canvas {
@@ -81,20 +93,12 @@ canvas {
   touch-action: none;
 }
 
-.signature-block {
-  margin-top: 15px;
-}
-
 button {
   margin-top: 30px;
   padding: 14px;
   width: 100%;
   font-size: 16px;
   cursor: pointer;
-}
-
-.pdf-space {
-  margin-top: 12px;
 }
 </style>
 
@@ -162,9 +166,9 @@ button {
   </div>
 </div>
 
-<label>Az állat testében található-e bármilyen implantátum?</label>
-<div class="checkbox-row"><input type="checkbox" class="implant"> Igen</div>
-<div class="checkbox-row"><input type="checkbox" class="implant"> Nem</div>
+<label>Implantátum az állat testében?</label>
+<div class="checkline"><span>Igen</span><input type="checkbox" class="implant"></div>
+<div class="checkline"><span>Nem</span><input type="checkbox" class="implant"></div>
 
 <label>Milyen urna?</label>
 <input type="text">
@@ -175,11 +179,14 @@ button {
   <option>Nem ragasztva</option>
 </select>
 
-<label>Fizetés módja</label>
-<div class="checkbox-row"><input type="checkbox"> Készpénz</div>
-<div class="checkbox-row"><input type="checkbox"> Átutalás (egy összegben)</div>
+<!-- ✅ FIZETÉS MÓDJA – LEJJEBB -->
+<div class="pdf-gap-30">
+  <label>Fizetés módja</label>
+  <div class="checkline"><span>Készpénz</span><input type="checkbox"></div>
+  <div class="checkline"><span>Átutalás (egy összegben)</span><input type="checkbox"></div>
+</div>
 
-<div class="pdf-space">
+<div class="pdf-gap-30">
   <label>Elszállításnál fizetett összeg (Ft)</label>
   <input type="number">
 </div>
@@ -187,14 +194,14 @@ button {
 <label>Visszaszállításnál fizetendő összeg (Ft)</label>
 <input type="number">
 
-<div class="checkbox-row">
+<div class="checkline pdf-gap-30">
+  <span>Tisztelt Gazdi! A kisállattal együtt átvett pokróc, nyakörv stb. megsemmisítésre kerül.</span>
   <input type="checkbox">
-  Tisztelt Gazdi! A kisállattal együtt átvett pokróc, nyakörv stb. megsemmisítésre kerül.
 </div>
 
-<div class="checkbox-row">
+<div class="checkline">
+  <span>Hozzájárulok személyes adataim kezeléséhez</span>
   <input type="checkbox" required>
-  Hozzájárulok személyes adataim kezeléséhez
 </div>
 
 <label>Megjegyzés</label>
@@ -211,74 +218,37 @@ button {
 </div>
 
 <script>
-// DÁTUM + ÉRKEZTETÉS
-const d = new Date();
-const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-datum.innerText = ds.replaceAll("-", ".");
-let c = localStorage.getItem("erk") || 0;
-localStorage.setItem("erk", ++c);
-erkszam.innerText = `${ds}-${String(c).padStart(4,"0")}`;
+const d=new Date();
+const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+datum.innerText=ds.replaceAll("-",".");
+let c=localStorage.getItem("erk")||0;
+localStorage.setItem("erk",++c);
+erkszam.innerText=`${ds}-${String(c).padStart(4,"0")}`;
 
-// EGYÉB ÁLLAT
-allatFajta.onchange = e => {
-  egyebAllat.style.display = e.target.value === "Egyéb" ? "block" : "none";
-};
-
-// IMPLANT kizárás
 document.querySelectorAll(".implant").forEach(cb=>{
-  cb.onchange = ()=>document.querySelectorAll(".implant").forEach(o=>{
-    if(o!==cb) o.checked=false;
-  });
+  cb.onchange=()=>document.querySelectorAll(".implant").forEach(o=>o!==cb&&(o.checked=false));
 });
 
-// ALÁÍRÁS
-const canvas = document.getElementById("signUser");
-const ctx = canvas.getContext("2d");
-canvas.width = canvas.offsetWidth;
-canvas.height = 150;
-let draw = false;
+const canvas=document.getElementById("signUser");
+const ctx=canvas.getContext("2d");
+canvas.width=canvas.offsetWidth; canvas.height=150;
+let draw=false;
+function pos(e){const r=canvas.getBoundingClientRect();return e.touches?{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top}:{x:e.clientX-r.left,y:e.clientY-r.top};}
+["mousedown","touchstart"].forEach(ev=>canvas.addEventListener(ev,e=>{e.preventDefault();draw=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);}));
+["mousemove","touchmove"].forEach(ev=>canvas.addEventListener(ev,e=>{if(!draw)return;e.preventDefault();const p=pos(e);ctx.lineWidth=2;ctx.lineCap="round";ctx.lineTo(p.x,p.y);ctx.stroke();}));
+["mouseup","touchend","mouseleave"].forEach(ev=>canvas.addEventListener(ev,()=>{draw=false;ctx.beginPath();}));
 
-function pos(e){
-  const r = canvas.getBoundingClientRect();
-  return e.touches
-    ? {x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top}
-    : {x:e.clientX-r.left,y:e.clientY-r.top};
-}
+function cleanFileName(s){return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"_");}
 
-["mousedown","touchstart"].forEach(ev=>canvas.addEventListener(ev,e=>{
-  e.preventDefault(); draw=true;
-  const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y);
-}));
-["mousemove","touchmove"].forEach(ev=>canvas.addEventListener(ev,e=>{
-  if(!draw)return; e.preventDefault();
-  const p=pos(e); ctx.lineWidth=2; ctx.lineCap="round";
-  ctx.lineTo(p.x,p.y); ctx.stroke();
-}));
-["mouseup","touchend","mouseleave"].forEach(ev=>canvas.addEventListener(ev,()=>{
-  draw=false; ctx.beginPath();
-}));
-
-function cleanFileName(str){
-  return str.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"_");
-}
-
-pdfBtn.onclick = async () => {
-  const cimText = cim.value || "cim";
-  const fileName = `azonosito_lap_${ds}_${cleanFileName(cimText)}.pdf`;
-
-  const pdfBlob = await html2pdf().from(doc).set({
-    margin: 10,
-    html2canvas: { scale: 0.85, scrollY: 0 },
-    jsPDF: { unit: "mm", format: "a4" }
-  }).outputPdf("blob");
-
-  const fd = new FormData();
-  fd.append("pdf", pdfBlob, fileName);
-  fd.append("ugyfelEmail", ugyfelEmail.value);
-  fd.append("gazdaNev", gazdaNev.value);
-  fd.append("cim", cim.value);
-
-  await fetch("/send-pdf", { method:"POST", body:fd });
+pdfBtn.onclick=async()=>{
+  const fn=`azonosito_lap_${ds}_${cleanFileName(cim.value)}.pdf`;
+  const blob=await html2pdf().from(doc).set({margin:10,html2canvas:{scale:0.85},jsPDF:{unit:"mm",format:"a4"}}).outputPdf("blob");
+  const fd=new FormData();
+  fd.append("pdf",blob,fn);
+  fd.append("ugyfelEmail",ugyfelEmail.value);
+  fd.append("gazdaNev",gazdaNev.value);
+  fd.append("cim",cim.value);
+  await fetch("/send-pdf",{method:"POST",body:fd});
   alert("PDF elküldve!");
 };
 </script>
