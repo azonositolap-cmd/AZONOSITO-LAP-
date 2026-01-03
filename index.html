@@ -52,6 +52,7 @@ input, select, textarea {
 
 textarea {
   min-height: 90px;
+  resize: vertical;
 }
 
 .row {
@@ -66,14 +67,28 @@ textarea {
 canvas {
   border: 1px solid #000;
   height: 150px;
+  touch-action: none;
   background: #fff;
 }
 
+.checkbox {
+  margin-top: 18px;
+}
+
+.checkbox label {
+  font-weight: normal;
+}
+
+.checkbox input {
+  transform: scale(1.2);
+}
+
 button {
-  margin-top: 30px;
-  padding: 16px;
+  margin-top: 20px;
+  padding: 14px;
   width: 100%;
-  font-size: 18px;
+  font-size: 16px;
+  cursor: pointer;
 }
 </style>
 
@@ -82,8 +97,8 @@ button {
 
 <body>
 
-<!-- 🔴 FONTOS: MINDEN, AMI A PDF-BE MEGY, EBEN VAN -->
-<div class="container" id="pdf-content">
+<!-- ⚠️ FONTOS: MINDEN BENNE VAN A DOC-BAN -->
+<div class="container" id="doc">
 
 <h2>Azonosító lap</h2>
 
@@ -92,72 +107,117 @@ button {
   <div>Érkeztetési szám: <span id="erkszam"></span></div>
 </div>
 
-<label>Gazda neve</label>
-<input id="gazdaNev" type="text">
+<label>Megbízó neve</label>
+<input type="text" id="gazdaNev">
 
 <label>Cím</label>
-<input id="cim" type="text">
+<input type="text" id="cim">
 
 <label>Telefonszám</label>
 <input type="tel">
 
+<label>Megbízott</label>
+<input type="text" value="Budai Tamás e.v." readonly>
+
+<label>Állat adatai</label>
+<select id="allatFajta">
+  <option value="">Válasszon</option>
+  <option>Kutya</option>
+  <option>Macska</option>
+  <option>Egyéb</option>
+</select>
+
+<div id="egyebAllat" style="display:none;">
+  <label>Milyen állat?</label>
+  <input type="text">
+</div>
+
 <label>Megjegyzés</label>
 <textarea></textarea>
 
-<label>Aláírás</label>
+<label>Megbízó aláírása</label>
 <canvas id="signUser"></canvas>
 
 <label>Ügyfél email címe</label>
-<input type="email" id="ugyfelEmail">
+<input type="email" id="ugyfelEmail" required>
+
+<button id="pdfBtn">PDF készítés és küldés</button>
 
 </div>
 
-<button id="pdfBtn">PDF készítés</button>
-
 <script>
-// dátum
+// ===== DÁTUM =====
 const d = new Date();
-const ds = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
-datum.innerText = ds;
-erkszam.innerText = Date.now();
+const datumStr = d.toLocaleDateString("hu-HU");
+document.getElementById("datum").innerText = datumStr;
 
-// aláírás
+// ===== ÉRKEZTETÉS =====
+let c = localStorage.getItem("erk") || 0;
+localStorage.setItem("erk", ++c);
+document.getElementById("erkszam").innerText = `${d.getFullYear()}-${String(c).padStart(4,"0")}`;
+
+// ===== ALÁÍRÁS =====
 const canvas = document.getElementById("signUser");
 const ctx = canvas.getContext("2d");
 canvas.width = canvas.offsetWidth;
 canvas.height = 150;
-let draw=false;
+let draw = false;
 
-canvas.addEventListener("mousedown",e=>{
-  draw=true; ctx.beginPath(); ctx.moveTo(e.offsetX,e.offsetY);
+canvas.addEventListener("mousedown", e => {
+  draw = true;
+  ctx.beginPath();
+  ctx.moveTo(e.offsetX, e.offsetY);
 });
-canvas.addEventListener("mousemove",e=>{
+
+canvas.addEventListener("mousemove", e => {
   if(!draw) return;
-  ctx.lineTo(e.offsetX,e.offsetY);
+  ctx.lineTo(e.offsetX, e.offsetY);
   ctx.stroke();
 });
-canvas.addEventListener("mouseup",()=>draw=false);
 
-// fájlnév tisztítás
-function clean(s){
-  return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/gi,"_");
+["mouseup","mouseleave"].forEach(ev =>
+  canvas.addEventListener(ev, () => draw = false)
+);
+
+// ===== FÁJLNÉV TISZTÍTÁS =====
+function clean(str){
+  return str.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-zA-Z0-9]+/g,"_")
+    .replace(/^_|_$/g,"");
 }
 
-// PDF
+// ===== PDF + EMAIL =====
 pdfBtn.onclick = async () => {
-  const nev = clean(gazdaNev.value || "nev");
-  const cimTxt = clean(cim.value || "cim");
-  const fileName = `azonosito_lap_${ds}_${nev}_${cimTxt}.pdf`;
+  if(!ugyfelEmail.value) {
+    alert("Add meg az email címet!");
+    return;
+  }
 
-  await html2pdf()
-    .from(document.getElementById("pdf-content"))
+  const gazda = clean(gazdaNev.value || "gazda");
+  const cimClean = clean(cim.value || "cim");
+  const datumClean = datumStr.replaceAll(".","-");
+
+  const fileName = `azonosito_lap_${gazda}_${cimClean}_${datumClean}.pdf`;
+
+  const pdfBlob = await html2pdf()
+    .from(document.getElementById("doc"))
     .set({
       margin: 10,
-      html2canvas: { scale: 2, scrollY: 0 },
-      jsPDF: { unit: "mm", format: "a4" },
-      filename: fileName
+      html2canvas: { scale: 1, scrollY: 0 },
+      jsPDF: { unit: "mm", format: "a4" }
     })
-    .save();
+    .outputPdf("blob");
+
+  const fd = new FormData();
+  fd.append("pdf", pdfBlob, fileName);
+  fd.append("ugyfelEmail", ugyfelEmail.value);
+  fd.append("gazdaNev", gazdaNev.value);
+  fd.append("cim", cim.value);
+
+  await fetch("/send-pdf", { method: "POST", body: fd });
+
+  alert("PDF elküldve!");
 };
 </script>
 
