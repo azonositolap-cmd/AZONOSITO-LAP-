@@ -7,20 +7,58 @@
 
 <style>
 * { box-sizing: border-box; }
-body { font-family: Arial, sans-serif; background:#f5f5f5; padding:20px; }
-.container { background:#fff; max-width:900px; margin:auto; padding:30px; border:1px solid #ccc; }
-h2 { text-align:center; margin-bottom:30px; }
-.top-info { display:flex; justify-content:space-between; margin-bottom:25px; font-weight:bold; }
-label { font-weight:bold; display:block; margin-top:18px; }
-input, select, textarea, canvas { width:100%; margin-top:6px; }
-input, select, textarea { padding:10px; font-size:15px; }
-textarea { min-height:90px; }
-.row { display:flex; gap:20px; }
-.row > div { flex:1; }
-canvas { border:1px solid #000; height:150px; background:#fff; }
-.checkbox { margin-top:10px; }
-.checkbox label { font-weight:normal; }
-button { margin-top:25px; padding:14px; width:100%; font-size:16px; cursor:pointer; }
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  padding: 20px;
+}
+.container {
+  background: #fff;
+  max-width: 900px;
+  margin: auto;
+  padding: 30px;
+  border: 1px solid #ccc;
+}
+h2 { text-align: center; margin-bottom: 30px; }
+.top-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 25px;
+  font-weight: bold;
+}
+label { font-weight: bold; display: block; margin-top: 18px; }
+input, select, textarea, canvas {
+  width: 100%;
+  margin-top: 6px;
+}
+input, select, textarea {
+  padding: 10px;
+  font-size: 15px;
+}
+textarea { min-height: 90px; }
+.row { display: flex; gap: 20px; }
+.row > div { flex: 1; }
+canvas {
+  border: 1px solid #000;
+  height: 150px;
+  background: #fff;
+}
+.checkbox {
+  margin-top: 12px;
+}
+.checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: normal;
+}
+button {
+  margin-top: 25px;
+  padding: 14px;
+  width: 100%;
+  font-size: 16px;
+  cursor: pointer;
+}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -37,20 +75,18 @@ button { margin-top:25px; padding:14px; width:100%; font-size:16px; cursor:point
 </div>
 
 <label>Megbízó neve</label>
-<input id="gazdaNev" type="text">
+<input id="gazdaNev">
 
 <label>Cím</label>
-<input id="cim" type="text">
+<input id="cim">
 
 <label>Telefonszám</label>
 <input type="tel">
 
 <label>Megbízott</label>
-<input type="text"
-value="Budai Tamás e.v. | Adószám: 69528279-1-43 | Nyilvántartási szám: 53314194"
-readonly>
+<input value="Budai Tamás e.v. | Adószám: 69528279143 | Nyilvántartási szám: 53314194" readonly>
 
-<label>Állat adatai</label>
+<label>Állat fajtája</label>
 <select id="allatFajta">
   <option value="">Válasszon</option>
   <option>Kutya</option>
@@ -58,19 +94,19 @@ readonly>
   <option>Egyéb</option>
 </select>
 
-<div id="egyebAllat" style="display:none">
+<div id="egyebAllat" style="display:none;">
   <label>Milyen állat?</label>
-  <input type="text">
+  <input>
 </div>
 
 <div class="row">
   <div>
     <label>Állat neve</label>
-    <input type="text">
+    <input>
   </div>
   <div>
     <label>Chip szám</label>
-    <input type="text">
+    <input>
   </div>
 </div>
 
@@ -89,19 +125,12 @@ readonly>
   </div>
 </div>
 
-<label>
-Az állat testében található-e bármilyen implantátum
-(pl. chipen kívüli fém, orvosi eszköz)?
-</label>
-<div class="checkbox">
-  <label><input type="checkbox" class="implant"> Igen</label>
-</div>
-<div class="checkbox">
-  <label><input type="checkbox" class="implant"> Nem</label>
-</div>
+<label>Található-e implantátum?</label>
+<div class="checkbox"><label><input type="checkbox" class="implant"> Igen</label></div>
+<div class="checkbox"><label><input type="checkbox" class="implant"> Nem</label></div>
 
 <label>Milyen urna?</label>
-<input type="text">
+<input>
 
 <label>Urna állapota</label>
 <select>
@@ -110,18 +139,28 @@ Az állat testében található-e bármilyen implantátum
 </select>
 
 <label>Fizetés módja</label>
-<div class="checkbox">
-  <label><input type="checkbox"> Készpénz</label>
-</div>
-<div class="checkbox">
-  <label><input type="checkbox"> Átutalás (egy összegben)</label>
-</div>
+<div class="checkbox"><label><input type="checkbox"> Készpénz</label></div>
+<div class="checkbox"><label><input type="checkbox"> Átutalás (egy összegben)</label></div>
 
 <label>Elszállításnál fizetett összeg (Ft)</label>
 <input type="number">
 
 <label>Visszaszállításnál fizetendő összeg (Ft)</label>
 <input type="number">
+
+<div class="checkbox">
+  <label>
+    <input type="checkbox">
+    A kisállattal együtt átvett pokróc, nyakörv stb. megsemmisítésre kerül.
+  </label>
+</div>
+
+<div class="checkbox">
+  <label>
+    <input type="checkbox" required>
+    Hozzájárulok személyes adataim kezeléséhez.
+  </label>
+</div>
 
 <label>Megjegyzés</label>
 <textarea></textarea>
@@ -130,55 +169,67 @@ Az állat testében található-e bármilyen implantátum
 <canvas id="signUser"></canvas>
 
 <label>Ügyfél email címe</label>
-<input type="email" id="ugyfelEmail">
+<input type="email" id="ugyfelEmail" required>
 
-<button id="pdfBtn">PDF készítés</button>
+<button id="pdfBtn">PDF készítés és küldés</button>
 
 </div>
 
 <script>
-const d = new Date();
-const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-datum.innerText = ds;
-let c = localStorage.getItem("erk") || 0;
-localStorage.setItem("erk", ++c);
-erkszam.innerText = ds + "-" + String(c).padStart(4,"0");
+// dátum
+const d=new Date();
+const ds=`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+datum.innerText=ds;
+let c=localStorage.getItem("erk")||0;
+localStorage.setItem("erk",++c);
+erkszam.innerText=`${d.getFullYear()}-${c}`;
 
-allatFajta.onchange = e => {
-  egyebAllat.style.display = e.target.value==="Egyéb" ? "block" : "none";
+// egyéb állat
+allatFajta.onchange=e=>{
+  egyebAllat.style.display=e.target.value==="Egyéb"?"block":"none";
 };
 
+// implant kizárás
 document.querySelectorAll(".implant").forEach(cb=>{
-  cb.onchange = ()=>document.querySelectorAll(".implant").forEach(o=>{
+  cb.onchange=()=>document.querySelectorAll(".implant").forEach(o=>{
     if(o!==cb) o.checked=false;
   });
 });
 
-const canvas = document.getElementById("signUser");
-const ctx = canvas.getContext("2d");
-canvas.width = canvas.offsetWidth;
-canvas.height = 150;
+// aláírás
+const canvas=document.getElementById("signUser");
+const ctx=canvas.getContext("2d");
+canvas.width=canvas.offsetWidth;
+canvas.height=150;
 let draw=false;
 
-canvas.onmousedown = e => { draw=true; ctx.beginPath(); ctx.moveTo(e.offsetX,e.offsetY); };
-canvas.onmousemove = e => { if(draw){ ctx.lineTo(e.offsetX,e.offsetY); ctx.stroke(); }};
-canvas.onmouseup = () => draw=false;
+canvas.onmousedown=e=>{draw=true;ctx.beginPath();ctx.moveTo(e.offsetX,e.offsetY);}
+canvas.onmousemove=e=>{if(draw){ctx.lineTo(e.offsetX,e.offsetY);ctx.stroke();}}
+canvas.onmouseup=()=>draw=false;
 
-function clean(str){
-  return str.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"_");
-}
+// fájlnév tisztítás
+function clean(s){return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/gi,"_");}
 
-pdfBtn.onclick = () => {
-  const cim = document.getElementById("cim").value || "cim_nelkul";
-  const fileName = `azonosito_lap_${ds}_${clean(cim)}.pdf`;
+// PDF
+pdfBtn.onclick=async()=>{
+  const cimText=cim.value||"cim_nelkul";
+  const fileName=`${ds}_${clean(cimText)}.pdf`;
 
-  html2pdf().from(document.getElementById("doc")).set({
-    filename: fileName,
-    html2canvas:{ scale:0.85 },
-    jsPDF:{ unit:"mm", format:"a4" }
-  }).save();
+  const blob=await html2pdf().from(doc).set({
+    margin:10,
+    html2canvas:{scale:0.8},
+    jsPDF:{unit:"mm",format:"a4"}
+  }).outputPdf("blob");
+
+  const fd=new FormData();
+  fd.append("pdf",blob,fileName);
+  fd.append("ugyfelEmail",ugyfelEmail.value);
+  fd.append("gazdaNev",gazdaNev.value);
+  fd.append("cim",cim.value);
+
+  await fetch("/send-pdf",{method:"POST",body:fd});
+  alert("PDF elkészült és elküldve");
 };
 </script>
-
 </body>
 </html>
