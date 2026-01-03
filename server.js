@@ -1,36 +1,66 @@
 const express = require("express");
+const cors = require("cors");
+const path = require("path");
+const multer = require("multer");
 const { Resend } = require("resend");
 
 const app = express();
+const upload = multer();
 
-// 🔴 NEM IDE ÍRJ API KULCSOT
-// 🔴 Render Environment Variable-ből jön
+// 🔴 EZ KÖTELEZŐ – ENV-BŐL JÖN
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// === TESZT ROUTE ===
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(__dirname));
+
+// ✅ FŐOLDAL
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+
+// ✅ TESZT EMAIL (BÖNGÉSZŐBE!)
 app.get("/test-email", async (req, res) => {
   try {
-    const result = await resend.emails.send({
-      from: "Azonosító lap <onboarding@resend.dev>",
-      to: ["azonisitolap@gmail.com"], // IDE JÖN A TESZT
-      subject: "Resend TESZT",
-      text: "Ha ezt megkaptad, működik az email küldés."
+    await resend.emails.send({
+      from: "Teszt <no-reply@resend.dev>",
+      to: ["azonositolap@gmail.com"],
+      subject: "TESZT – Resend működik",
+      text: "Ha ezt megkaptad, az email küldés OK."
     });
 
-    res.json({ ok: true, result });
+    res.send("✅ Teszt email elküldve");
   } catch (err) {
     console.error(err);
     res.status(500).json(err);
   }
 });
 
-// === ROOT (NE LEGYEN NOT FOUND) ===
-app.get("/", (req, res) => {
-  res.send("Szerver fut. /test-email végponton tesztelj.");
+// ✅ ŰRLAP → EMAIL
+app.post("/send-pdf", upload.none(), async (req, res) => {
+  const { ugyfelEmail } = req.body;
+
+  if (!ugyfelEmail) {
+    return res.status(400).send("Hiányzó email");
+  }
+
+  try {
+    await resend.emails.send({
+      from: "Azonosító lap <no-reply@resend.dev>",
+      to: [ugyfelEmail, "azonisitolap@gmail.com"],
+      subject: "Azonosító lap",
+      text: "Az űrlap sikeresen elküldve."
+    });
+
+    res.send("✅ Email elküldve");
+  } catch (err) {
+    console.error(err);
+    res.status(500).json(err);
+  }
 });
 
-// === PORT (RENDER MIATT KÖTELEZŐ) ===
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("Server running on port", PORT);
+  console.log("Szerver fut porton:", PORT);
 });
