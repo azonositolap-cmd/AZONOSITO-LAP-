@@ -17,8 +17,9 @@ input, select, textarea { padding:10px; font-size:15px; }
 textarea { min-height:90px; }
 .row { display:flex; gap:20px; }
 .row > div { flex:1; }
-canvas { border:1px solid #000; height:150px; background:#fff; }
+canvas { border:1px solid #000; height:150px; background:#fff; touch-action:none; }
 .checkbox { margin-top:12px; }
+.checkbox label { font-weight:normal; }
 button { margin-top:25px; padding:14px; width:100%; font-size:16px; cursor:pointer; }
 </style>
 
@@ -36,46 +37,58 @@ button { margin-top:25px; padding:14px; width:100%; font-size:16px; cursor:point
 </div>
 
 <label>Megbízó neve</label>
-<input id="gazdaNev">
+<input id="gazdaNev" type="text">
 
 <label>Cím</label>
-<input id="cim">
+<input id="cim" type="text">
 
 <label>Telefonszám</label>
-<input>
+<input type="tel">
 
 <label>Megbízott</label>
-<input value="Budai Tamás e.v." readonly>
+<input type="text" value="Budai Tamás e.v." readonly>
 
-<label>Állat adatai</label>
+<label>Állat fajtája</label>
 <select id="allatFajta">
+  <option value="">Válasszon</option>
   <option>Kutya</option>
   <option>Macska</option>
   <option>Egyéb</option>
 </select>
 
-<label>Állat neve</label>
-<input>
+<div id="egyebAllat" style="display:none">
+  <label>Milyen állat?</label>
+  <input type="text">
+</div>
 
-<label>Chip szám</label>
-<input>
+<div class="row">
+  <div>
+    <label>Állat neve</label>
+    <input type="text">
+  </div>
+  <div>
+    <label>Chip szám</label>
+    <input type="text">
+  </div>
+</div>
 
-<label>Állat neme</label>
-<select>
-  <option>Hím</option>
-  <option>Nőstény</option>
-  <option>Ismeretlen</option>
-</select>
+<div class="row">
+  <div>
+    <label>Állat neme</label>
+    <select>
+      <option>Hím</option>
+      <option>Nőstény</option>
+      <option>Ismeretlen</option>
+    </select>
+  </div>
+  <div>
+    <label>Súly (kg)</label>
+    <input type="number">
+  </div>
+</div>
 
-<label>Súly (kg)</label>
-<input type="number">
-
-<label>Implantátum az állatban?</label>
-<div class="checkbox"><input type="checkbox"> Igen</div>
-<div class="checkbox"><input type="checkbox"> Nem</div>
-
-<label>Milyen urna?</label>
-<input>
+<label>Urna típusa</label>
+<input type="text">
 
 <label>Urna állapota</label>
 <select>
@@ -84,62 +97,57 @@ button { margin-top:25px; padding:14px; width:100%; font-size:16px; cursor:point
 </select>
 
 <label>Fizetés módja</label>
-<div class="checkbox"><input type="checkbox"> Készpénz</div>
-<div class="checkbox"><input type="checkbox"> Átutalás</div>
+<div class="checkbox"><label><input type="checkbox"> Készpénz</label></div>
+<div class="checkbox"><label><input type="checkbox"> Átutalás</label></div>
 
 <label>Megjegyzés</label>
 <textarea></textarea>
 
 <label>Megbízó aláírása</label>
-<canvas id="sign"></canvas>
+<canvas id="signUser"></canvas>
 
 <label>Ügyfél email címe</label>
-<input type="email" id="ugyfelEmail">
+<input type="email" id="ugyfelEmail" required>
 
-<button id="pdfBtn">PDF készítés és küldés</button>
+<button id="pdfBtn">PDF készítés</button>
 
 </div>
 
 <script>
-const d=new Date();
-const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-datum.innerText=ds.replaceAll("-",".");
-let c=localStorage.getItem("erk")||0;
-localStorage.setItem("erk",++c);
-erkszam.innerText=ds+"-"+String(c).padStart(4,"0");
+const d = new Date();
+const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+datum.innerText = ds;
+let c = localStorage.getItem("erk") || 0;
+localStorage.setItem("erk", ++c);
+erkszam.innerText = ds + "-" + String(c).padStart(4,"0");
 
-const canvas=document.getElementById("sign");
-const ctx=canvas.getContext("2d");
-canvas.width=canvas.offsetWidth;
-canvas.height=150;
+allatFajta.onchange = e => {
+  egyebAllat.style.display = e.target.value==="Egyéb" ? "block" : "none";
+};
+
+const canvas = document.getElementById("signUser");
+const ctx = canvas.getContext("2d");
+canvas.width = canvas.offsetWidth;
+canvas.height = 150;
 let draw=false;
-canvas.onmousedown=e=>{draw=true;ctx.beginPath();ctx.moveTo(e.offsetX,e.offsetY);}
-canvas.onmousemove=e=>{if(draw){ctx.lineTo(e.offsetX,e.offsetY);ctx.stroke();}}
-canvas.onmouseup=()=>draw=false;
 
-function clean(s){return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"_");}
+canvas.onmousedown = e => { draw=true; ctx.beginPath(); ctx.moveTo(e.offsetX,e.offsetY); };
+canvas.onmousemove = e => { if(draw){ ctx.lineTo(e.offsetX,e.offsetY); ctx.stroke(); }};
+canvas.onmouseup = () => draw=false;
 
-pdfBtn.onclick=async()=>{
- if(!ugyfelEmail.value)return alert("Email kell");
- const fileName=`${clean(cim.value||"cim")}_${ds}.pdf`;
+function clean(str){
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"_");
+}
 
- const pdf=await html2pdf().from(doc).set({
-   html2canvas:{scale:0.85},
-   jsPDF:{unit:"mm",format:"a4"}
- }).outputPdf("blob");
+pdfBtn.onclick = async () => {
+  const cim = document.getElementById("cim").value || "cim_nelkul";
+  const fileName = `azonosito_lap_${ds}_${clean(cim)}.pdf`;
 
- const fd=new FormData();
- fd.append("pdf",pdf,fileName);
- fd.append("ugyfelEmail",ugyfelEmail.value);
- fd.append("gazdaNev",gazdaNev.value);
- fd.append("cim",cim.value);
-
- await fetch("https://SAJAT-SERVICE-NEV.onrender.com/send-pdf",{
-   method:"POST",
-   body:fd
- });
-
- alert("Elküldve");
+  await html2pdf().from(document.getElementById("doc")).set({
+    filename: fileName,
+    html2canvas:{ scale:0.85 },
+    jsPDF:{ unit:"mm", format:"a4" }
+  }).save();
 };
 </script>
 
