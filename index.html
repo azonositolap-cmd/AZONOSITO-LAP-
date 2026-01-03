@@ -16,7 +16,7 @@ body {
 
 .container {
   background: #fff;
-  width: 210mm;
+  max-width: 900px;
   margin: auto;
   padding: 30px;
   border: 1px solid #ccc;
@@ -50,23 +50,18 @@ input, select, textarea {
   font-size: 15px;
 }
 
-textarea {
-  min-height: 90px;
-}
+textarea { min-height: 90px; }
 
 .row {
   display: flex;
   gap: 20px;
 }
 
-.row > div {
-  flex: 1;
-}
+.row > div { flex: 1; }
 
 canvas {
   border: 1px solid #000;
   height: 150px;
-  background: #fff;
 }
 
 .checkbox {
@@ -78,26 +73,11 @@ canvas {
   border-bottom: 1px dotted #ccc;
 }
 
-.checkbox span {
-  flex: 1;
-  padding-right: 15px;
-}
-
-.checkbox input {
-  width: 22px;
-  height: 22px;
-}
-
 button {
   margin-top: 30px;
   padding: 14px;
   width: 100%;
   font-size: 16px;
-  cursor: pointer;
-}
-
-label, input, textarea, .row, .checkbox {
-  page-break-inside: avoid;
 }
 </style>
 
@@ -127,173 +107,84 @@ label, input, textarea, .row, .checkbox {
 <input type="text" readonly value="Budai Tamás e.v. | Adószám: 69528279-1-43 | Nyilvántartási szám: 53314194">
 
 <label>Állat adatai</label>
-<select id="allatFajta">
-  <option value="">Válasszon</option>
+<select>
   <option>Kutya</option>
   <option>Macska</option>
-  <option>Egyéb</option>
 </select>
-
-<div id="egyebAllat" style="display:none;">
-  <label>Milyen állat?</label>
-  <input type="text">
-</div>
-
-<div class="row">
-  <div>
-    <label>Név</label>
-    <input type="text">
-  </div>
-  <div>
-    <label>Chip szám</label>
-    <input type="text">
-  </div>
-</div>
-
-<div class="row">
-  <div>
-    <label>Állat neme</label>
-    <select>
-      <option>Hím</option>
-      <option>Nőstény</option>
-      <option>Ismeretlen</option>
-    </select>
-  </div>
-  <div>
-    <label>Súly (kg)</label>
-    <input type="number">
-  </div>
-</div>
-
-<label>Található-e implantátum (chipen kívül, fém, orvosi eszköz)?</label>
-<div class="checkbox"><span>Igen</span><input type="checkbox" class="implant"></div>
-<div class="checkbox"><span>Nem</span><input type="checkbox" class="implant"></div>
-
-<label>Milyen urna?</label>
-<input type="text">
-
-<label>Urna állapota</label>
-<select>
-  <option>Ragasztva</option>
-  <option>Nem ragasztva</option>
-</select>
-
-<label>Fizetés módja</label>
-<div class="checkbox"><span>Készpénz</span><input type="checkbox"></div>
-<div class="checkbox"><span>Átutalás (egy összegben)</span><input type="checkbox"></div>
-
-<label>Elszállításnál fizetett összeg (Ft)</label>
-<input type="number">
-
-<label>Visszaszállításnál fizetendő összeg (Ft)</label>
-<input type="number">
-
-<div class="checkbox">
-  <span>A kisállattal együtt átvett pokróc, nyakörv stb. megsemmisítésre kerül.</span>
-  <input type="checkbox">
-</div>
-
-<div class="checkbox">
-  <span>Hozzájárulok személyes adataim kezeléséhez</span>
-  <input type="checkbox" required>
-</div>
-
-<label>Hol találta hirdetésünket?</label>
-<input type="text">
 
 <label>Megjegyzés</label>
 <textarea></textarea>
 
 <label>Megbízó aláírása</label>
-<canvas id="signUser"></canvas>
+<canvas id="sign"></canvas>
 
 <label>Ügyfél email címe</label>
-<input type="email" id="ugyfelEmail" required>
+<input type="email" id="email">
 
 <button id="pdfBtn">PDF készítés és küldés</button>
-
 </div>
 
 <script>
 const d = new Date();
-const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-datum.innerText = ds.replaceAll("-", ".");
-let c = localStorage.getItem("erk") || 0;
-localStorage.setItem("erk", ++c);
-erkszam.innerText = `${ds}-${String(c).padStart(4,"0")}`;
+datum.innerText = d.toLocaleDateString("hu-HU");
+erkszam.innerText = d.getTime();
 
-allatFajta.onchange = e =>
-  egyebAllat.style.display = e.target.value==="Egyéb" ? "block" : "none";
-
-document.querySelectorAll(".implant").forEach(cb=>{
-  cb.onchange = ()=>document.querySelectorAll(".implant").forEach(o=>{
-    if(o!==cb) o.checked=false;
-  });
-});
-
-const canvas = document.getElementById("signUser");
+const canvas = document.getElementById("sign");
 const ctx = canvas.getContext("2d");
 canvas.width = canvas.offsetWidth;
 canvas.height = 150;
 let draw=false;
 
-function pos(e){
-  const r=canvas.getBoundingClientRect();
-  return e.touches
-    ? {x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top}
-    : {x:e.clientX-r.left,y:e.clientY-r.top};
+canvas.onmousedown = e => { draw=true; ctx.moveTo(e.offsetX,e.offsetY); };
+canvas.onmousemove = e => { if(draw){ ctx.lineTo(e.offsetX,e.offsetY); ctx.stroke(); }};
+canvas.onmouseup = ()=> draw=false;
+
+/* 🔥 PDF-FLATTEN LOGIKA */
+function flattenForPdf(original){
+  const clone = original.cloneNode(true);
+
+  clone.querySelectorAll("input, textarea, select").forEach(el=>{
+    let value = "";
+    if(el.type==="checkbox") value = el.checked ? "☑ Igen" : "☐ Nem";
+    else if(el.tagName==="SELECT") value = el.options[el.selectedIndex]?.text || "";
+    else value = el.value;
+
+    const div = document.createElement("div");
+    div.style.padding = "10px";
+    div.style.border = "1px solid #ccc";
+    div.style.marginTop = "6px";
+    div.innerText = value;
+
+    el.replaceWith(div);
+  });
+
+  clone.querySelectorAll("canvas").forEach(c=>{
+    const img = document.createElement("img");
+    img.src = c.toDataURL();
+    img.style.width="100%";
+    c.replaceWith(img);
+  });
+
+  return clone;
 }
 
-["mousedown","touchstart"].forEach(ev=>canvas.addEventListener(ev,e=>{
-  draw=true; const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y);
-}));
-["mousemove","touchmove"].forEach(ev=>canvas.addEventListener(ev,e=>{
-  if(!draw)return; const p=pos(e);
-  ctx.lineWidth=2; ctx.lineCap="round";
-  ctx.lineTo(p.x,p.y); ctx.stroke();
-}));
-["mouseup","touchend","mouseleave"].forEach(ev=>canvas.addEventListener(ev,()=>{
-  draw=false; ctx.beginPath();
-}));
+pdfBtn.onclick = async ()=>{
+  const flat = flattenForPdf(document.getElementById("doc"));
 
-function clean(str){
-  return str.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/gi,"_");
-}
-
-pdfBtn.onclick = async () => {
-  if(!ugyfelEmail.value) return alert("Email kötelező");
-
-  const fileName = `${ds}_${clean(cim.value || "cim_nelkul")}.pdf`;
-
-  const pdfBlob = await html2pdf().from(doc).set({
-    margin: 0,
-    image: { type: 'jpeg', quality: 1 },
-    html2canvas: {
-      scale: 1,
-      scrollX: 0,
-      scrollY: 0,
-      windowWidth: 794,
-      windowHeight: 1123
-    },
-    jsPDF: {
-      unit: 'px',
-      format: [794,1123],
-      orientation: 'portrait'
-    },
-    pagebreak: { mode: ['css','legacy'] }
+  const pdfBlob = await html2pdf().from(flat).set({
+    margin: 10,
+    image: { type:'jpeg', quality:0.95 },
+    html2canvas:{ scale:1.5 },
+    jsPDF:{ unit:'mm', format:'a4', orientation:'portrait' }
   }).outputPdf("blob");
 
   const fd = new FormData();
-  fd.append("pdf", pdfBlob, fileName);
-  fd.append("ugyfelEmail", ugyfelEmail.value);
-  fd.append("gazdaNev", gazdaNev.value);
-  fd.append("cim", cim.value);
+  fd.append("pdf", pdfBlob, "azonosito.pdf");
+  fd.append("email", email.value);
 
-  await fetch("/send-pdf", { method:"POST", body: fd });
-
-  alert("PDF elküldve emailben");
+  await fetch("/send-pdf",{ method:"POST", body:fd });
+  alert("PDF elküldve");
 };
 </script>
-
 </body>
 </html>
