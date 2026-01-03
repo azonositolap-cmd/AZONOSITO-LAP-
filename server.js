@@ -1,64 +1,36 @@
 const express = require("express");
-const cors = require("cors");
-const multer = require("multer");
 const { Resend } = require("resend");
 
 const app = express();
-const upload = multer();
 
-// 🔴 NEM IDE ÍRJUK AZ API KULCSOT
+// 🔴 NEM IDE ÍRJ API KULCSOT
+// 🔴 Render Environment Variable-ből jön
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-app.use(cors());
-app.use(express.json());
-
-/* ===== TESZT EMAIL (PDF NÉLKÜL) ===== */
+// === TESZT ROUTE ===
 app.get("/test-email", async (req, res) => {
   try {
-    await resend.emails.send({
-      from: "Teszt <onboarding@resend.dev>",
-      to: ["azonositolap@gmail.com"],
-      subject: "Resend TESZT",
-      text: "Ha ezt megkaptad, a Resend működik."
-    });
-
-    res.send("OK – teszt email elküldve");
-  } catch (err) {
-    console.error(err);
-    res.status(500).json(err);
-  }
-});
-
-/* ===== PDF FELTÖLTÉS + EMAIL ===== */
-app.post("/send-pdf", upload.single("pdf"), async (req, res) => {
-  try {
-    const { ugyfelEmail } = req.body;
-
-    if (!ugyfelEmail || !req.file) {
-      return res.status(400).send("Hiányzó adat");
-    }
-
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: "Azonosító lap <onboarding@resend.dev>",
-      to: [ugyfelEmail, "azonositolap@gmail.com"],
-      subject: "Azonosító lap",
-      text: "Csatolva küldjük az azonosító lapot.",
-      attachments: [
-        {
-          filename: "azonosito_lap.pdf",
-          content: req.file.buffer.toString("base64")
-        }
-      ]
+      to: ["azonisitolap@gmail.com"], // IDE JÖN A TESZT
+      subject: "Resend TESZT",
+      text: "Ha ezt megkaptad, működik az email küldés."
     });
 
-    res.send("Email elküldve");
+    res.json({ ok: true, result });
   } catch (err) {
     console.error(err);
     res.status(500).json(err);
   }
 });
 
+// === ROOT (NE LEGYEN NOT FOUND) ===
+app.get("/", (req, res) => {
+  res.send("Szerver fut. /test-email végponton tesztelj.");
+});
+
+// === PORT (RENDER MIATT KÖTELEZŐ) ===
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("Szerver fut:", PORT);
+  console.log("Server running on port", PORT);
 });
