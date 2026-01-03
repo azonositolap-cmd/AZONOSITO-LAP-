@@ -7,11 +7,13 @@
 
 <style>
 * { box-sizing: border-box; }
+
 body {
   font-family: Arial, sans-serif;
   background: #f5f5f5;
   padding: 20px;
 }
+
 .container {
   background: #fff;
   max-width: 900px;
@@ -19,41 +21,79 @@ body {
   padding: 30px;
   border: 1px solid #ccc;
 }
-h2 { text-align: center; margin-bottom: 30px; }
+
+h2 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
 .top-info {
   display: flex;
   justify-content: space-between;
   margin-bottom: 25px;
   font-weight: bold;
 }
-label { font-weight: bold; display: block; margin-top: 18px; }
+
+label {
+  font-weight: bold;
+  display: block;
+  margin-top: 18px;
+}
+
 input, select, textarea, canvas {
   width: 100%;
   margin-top: 6px;
 }
+
 input, select, textarea {
   padding: 10px;
   font-size: 15px;
 }
-textarea { min-height: 90px; }
-.row { display: flex; gap: 20px; }
-.row > div { flex: 1; }
+
+textarea {
+  min-height: 90px;
+}
+
+.row {
+  display: flex;
+  gap: 20px;
+}
+
+.row > div {
+  flex: 1;
+}
+
 canvas {
   border: 1px solid #000;
   height: 150px;
   background: #fff;
 }
+
 .checkbox {
-  margin-top: 12px;
-}
-.checkbox label {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 10px;
-  font-weight: normal;
+  margin-top: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px dotted #ccc;
 }
+
+.checkbox span {
+  flex: 1;
+  padding-right: 15px;
+}
+
+.checkbox input {
+  width: 22px;
+  height: 22px;
+}
+
+.signature-block {
+  margin-top: 20px;
+}
+
 button {
-  margin-top: 25px;
+  margin-top: 30px;
   padding: 14px;
   width: 100%;
   font-size: 16px;
@@ -75,18 +115,18 @@ button {
 </div>
 
 <label>Megbízó neve</label>
-<input id="gazdaNev">
+<input type="text" id="gazdaNev">
 
 <label>Cím</label>
-<input id="cim">
+<input type="text" id="cim">
 
 <label>Telefonszám</label>
 <input type="tel">
 
 <label>Megbízott</label>
-<input value="Budai Tamás e.v. | Adószám: 69528279143 | Nyilvántartási szám: 53314194" readonly>
+<input type="text" readonly value="Budai Tamás e.v. | Adószám: 69528279-1-43 | Nyilvántartási szám: 53314194">
 
-<label>Állat fajtája</label>
+<label>Állat adatai</label>
 <select id="allatFajta">
   <option value="">Válasszon</option>
   <option>Kutya</option>
@@ -96,17 +136,17 @@ button {
 
 <div id="egyebAllat" style="display:none;">
   <label>Milyen állat?</label>
-  <input>
+  <input type="text">
 </div>
 
 <div class="row">
   <div>
-    <label>Állat neve</label>
-    <input>
+    <label>Név</label>
+    <input type="text">
   </div>
   <div>
     <label>Chip szám</label>
-    <input>
+    <input type="text">
   </div>
 </div>
 
@@ -125,12 +165,18 @@ button {
   </div>
 </div>
 
-<label>Található-e implantátum?</label>
-<div class="checkbox"><label><input type="checkbox" class="implant"> Igen</label></div>
-<div class="checkbox"><label><input type="checkbox" class="implant"> Nem</label></div>
+<label>Található-e implantátum (chipen kívül, fém, orvosi eszköz)?</label>
+<div class="checkbox">
+  <span>Igen</span>
+  <input type="checkbox" class="implant">
+</div>
+<div class="checkbox">
+  <span>Nem</span>
+  <input type="checkbox" class="implant">
+</div>
 
 <label>Milyen urna?</label>
-<input>
+<input type="text">
 
 <label>Urna állapota</label>
 <select>
@@ -139,8 +185,14 @@ button {
 </select>
 
 <label>Fizetés módja</label>
-<div class="checkbox"><label><input type="checkbox"> Készpénz</label></div>
-<div class="checkbox"><label><input type="checkbox"> Átutalás (egy összegben)</label></div>
+<div class="checkbox">
+  <span>Készpénz</span>
+  <input type="checkbox">
+</div>
+<div class="checkbox">
+  <span>Átutalás (egy összegben)</span>
+  <input type="checkbox">
+</div>
 
 <label>Elszállításnál fizetett összeg (Ft)</label>
 <input type="number">
@@ -149,18 +201,17 @@ button {
 <input type="number">
 
 <div class="checkbox">
-  <label>
-    <input type="checkbox">
-    A kisállattal együtt átvett pokróc, nyakörv stb. megsemmisítésre kerül.
-  </label>
+  <span>A kisállattal együtt átvett pokróc, nyakörv stb. megsemmisítésre kerül.</span>
+  <input type="checkbox">
 </div>
 
 <div class="checkbox">
-  <label>
-    <input type="checkbox" required>
-    Hozzájárulok személyes adataim kezeléséhez.
-  </label>
+  <span>Hozzájárulok személyes adataim kezeléséhez</span>
+  <input type="checkbox" required>
 </div>
+
+<label>Hol találta hirdetésünket?</label>
+<input type="text">
 
 <label>Megjegyzés</label>
 <textarea></textarea>
@@ -176,60 +227,71 @@ button {
 </div>
 
 <script>
-// dátum
-const d=new Date();
-const ds=`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
-datum.innerText=ds;
-let c=localStorage.getItem("erk")||0;
-localStorage.setItem("erk",++c);
-erkszam.innerText=`${d.getFullYear()}-${c}`;
+const d = new Date();
+const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+datum.innerText = ds.replaceAll("-", ".");
+let c = localStorage.getItem("erk") || 0;
+localStorage.setItem("erk", ++c);
+erkszam.innerText = `${ds}-${String(c).padStart(4,"0")}`;
 
-// egyéb állat
-allatFajta.onchange=e=>{
-  egyebAllat.style.display=e.target.value==="Egyéb"?"block":"none";
-};
+allatFajta.onchange = e => egyebAllat.style.display = e.target.value==="Egyéb" ? "block" : "none";
 
-// implant kizárás
 document.querySelectorAll(".implant").forEach(cb=>{
-  cb.onchange=()=>document.querySelectorAll(".implant").forEach(o=>{
+  cb.onchange = ()=>document.querySelectorAll(".implant").forEach(o=>{
     if(o!==cb) o.checked=false;
   });
 });
 
-// aláírás
-const canvas=document.getElementById("signUser");
-const ctx=canvas.getContext("2d");
-canvas.width=canvas.offsetWidth;
-canvas.height=150;
+const canvas = document.getElementById("signUser");
+const ctx = canvas.getContext("2d");
+canvas.width = canvas.offsetWidth;
+canvas.height = 150;
 let draw=false;
 
-canvas.onmousedown=e=>{draw=true;ctx.beginPath();ctx.moveTo(e.offsetX,e.offsetY);}
-canvas.onmousemove=e=>{if(draw){ctx.lineTo(e.offsetX,e.offsetY);ctx.stroke();}}
-canvas.onmouseup=()=>draw=false;
+function pos(e){
+  const r=canvas.getBoundingClientRect();
+  return e.touches
+    ? {x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top}
+    : {x:e.clientX-r.left,y:e.clientY-r.top};
+}
 
-// fájlnév tisztítás
-function clean(s){return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/gi,"_");}
+["mousedown","touchstart"].forEach(ev=>canvas.addEventListener(ev,e=>{
+  draw=true; const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y);
+}));
+["mousemove","touchmove"].forEach(ev=>canvas.addEventListener(ev,e=>{
+  if(!draw)return; const p=pos(e);
+  ctx.lineWidth=2; ctx.lineCap="round";
+  ctx.lineTo(p.x,p.y); ctx.stroke();
+}));
+["mouseup","touchend","mouseleave"].forEach(ev=>canvas.addEventListener(ev,()=>{
+  draw=false; ctx.beginPath();
+}));
 
-// PDF
-pdfBtn.onclick=async()=>{
-  const cimText=cim.value||"cim_nelkul";
-  const fileName=`${ds}_${clean(cimText)}.pdf`;
+function clean(str){
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/gi,"_");
+}
 
-  const blob=await html2pdf().from(doc).set({
+pdfBtn.onclick = async () => {
+  if(!ugyfelEmail.value) return alert("Email kötelező");
+
+  const fileName = `${ds}_${clean(cim.value || "cim_nelkul")}.pdf`;
+
+  const pdfBlob = await html2pdf().from(doc).set({
     margin:10,
-    html2canvas:{scale:0.8},
-    jsPDF:{unit:"mm",format:"a4"}
+    html2canvas:{ scale: window.innerWidth<768?0.65:0.85 },
+    jsPDF:{ unit:"mm", format:"a4", orientation:"portrait" }
   }).outputPdf("blob");
 
-  const fd=new FormData();
-  fd.append("pdf",blob,fileName);
-  fd.append("ugyfelEmail",ugyfelEmail.value);
-  fd.append("gazdaNev",gazdaNev.value);
-  fd.append("cim",cim.value);
+  const fd = new FormData();
+  fd.append("pdf", pdfBlob, fileName);
+  fd.append("ugyfelEmail", ugyfelEmail.value);
+  fd.append("gazdaNev", gazdaNev.value);
+  fd.append("cim", cim.value);
 
-  await fetch("/send-pdf",{method:"POST",body:fd});
-  alert("PDF elkészült és elküldve");
+  await fetch("/send-pdf",{ method:"POST", body:fd });
+  alert("PDF elküldve");
 };
 </script>
+
 </body>
 </html>
