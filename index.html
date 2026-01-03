@@ -14,16 +14,12 @@ h2 { text-align:center; margin-bottom:30px; }
 label { font-weight:bold; display:block; margin-top:18px; }
 input, select, textarea, canvas { width:100%; margin-top:6px; }
 input, select, textarea { padding:10px; font-size:15px; }
-textarea { min-height:90px; resize:vertical; }
+textarea { min-height:90px; }
 .row { display:flex; gap:20px; }
 .row > div { flex:1; }
-canvas { border:1px solid #000; height:150px; touch-action:none; background:#fff; }
-.checkbox { margin-top:18px; }
-.checkbox label { font-weight:normal; }
-.checkbox input { transform:scale(1.2); }
-.signature-block { margin-top:20px; }
-.pecset { width:260px; opacity:0.9; }
-button { margin-top:20px; padding:14px; width:100%; font-size:16px; cursor:pointer; }
+canvas { border:1px solid #000; height:150px; background:#fff; }
+.checkbox { margin-top:12px; }
+button { margin-top:25px; padding:14px; width:100%; font-size:16px; cursor:pointer; }
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -40,53 +36,46 @@ button { margin-top:20px; padding:14px; width:100%; font-size:16px; cursor:point
 </div>
 
 <label>Megbízó neve</label>
-<input id="gazdaNev" type="text">
+<input id="gazdaNev">
 
 <label>Cím</label>
-<input id="cim" type="text">
+<input id="cim">
 
 <label>Telefonszám</label>
-<input type="tel">
+<input>
 
 <label>Megbízott</label>
-<input type="text" value="Budai Tamás e.v." readonly>
+<input value="Budai Tamás e.v." readonly>
 
 <label>Állat adatai</label>
 <select id="allatFajta">
-  <option value="">Válasszon</option>
   <option>Kutya</option>
   <option>Macska</option>
   <option>Egyéb</option>
 </select>
 
-<div id="egyebAllat" style="display:none;">
-  <label>Milyen állat?</label>
-  <input type="text">
-</div>
+<label>Állat neve</label>
+<input>
 
-<div class="row">
-  <div><label>Név</label><input type="text"></div>
-  <div><label>Chip szám</label><input type="text"></div>
-</div>
+<label>Chip szám</label>
+<input>
 
-<div class="row">
-  <div>
-    <label>Állat neme</label>
-    <select>
-      <option>Hím</option>
-      <option>Nőstény</option>
-      <option>Ismeretlen</option>
-    </select>
-  </div>
-  <div><label>Súly (kg)</label><input type="number"></div>
-</div>
+<label>Állat neme</label>
+<select>
+  <option>Hím</option>
+  <option>Nőstény</option>
+  <option>Ismeretlen</option>
+</select>
 
-<label>Implantátum van?</label>
-<div class="checkbox"><label>Igen</label><input type="checkbox" class="implant"></div>
-<div class="checkbox"><label>Nem</label><input type="checkbox" class="implant"></div>
+<label>Súly (kg)</label>
+<input type="number">
+
+<label>Implantátum az állatban?</label>
+<div class="checkbox"><input type="checkbox"> Igen</div>
+<div class="checkbox"><input type="checkbox"> Nem</div>
 
 <label>Milyen urna?</label>
-<input type="text">
+<input>
 
 <label>Urna állapota</label>
 <select>
@@ -95,73 +84,62 @@ button { margin-top:20px; padding:14px; width:100%; font-size:16px; cursor:point
 </select>
 
 <label>Fizetés módja</label>
-<div class="checkbox"><label>Készpénz</label><input type="checkbox"></div>
-<div class="checkbox"><label>Átutalás</label><input type="checkbox"></div>
-
-<label>Elszállításnál fizetett összeg (Ft)</label>
-<input type="number">
-
-<label>Visszaszállításnál fizetendő összeg (Ft)</label>
-<input type="number">
+<div class="checkbox"><input type="checkbox"> Készpénz</div>
+<div class="checkbox"><input type="checkbox"> Átutalás</div>
 
 <label>Megjegyzés</label>
 <textarea></textarea>
 
 <label>Megbízó aláírása</label>
-<canvas id="signUser"></canvas>
+<canvas id="sign"></canvas>
 
 <label>Ügyfél email címe</label>
-<input id="ugyfelEmail" type="email" required>
+<input type="email" id="ugyfelEmail">
 
 <button id="pdfBtn">PDF készítés és küldés</button>
 
 </div>
 
 <script>
-/* DÁTUM */
 const d=new Date();
-const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-datum.innerText=ds.replaceAll("-", ".");
-erkszam.innerText=ds;
+const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+datum.innerText=ds.replaceAll("-",".");
+let c=localStorage.getItem("erk")||0;
+localStorage.setItem("erk",++c);
+erkszam.innerText=ds+"-"+String(c).padStart(4,"0");
 
-/* EGYÉB ÁLLAT */
-allatFajta.onchange=e=>egyebAllat.style.display=e.target.value==="Egyéb"?"block":"none";
-
-/* IMPLANT */
-document.querySelectorAll(".implant").forEach(cb=>{
- cb.onchange=()=>document.querySelectorAll(".implant").forEach(o=>o!==cb&&(o.checked=false));
-});
-
-/* ALÁÍRÁS */
-const canvas=document.getElementById("signUser");
+const canvas=document.getElementById("sign");
 const ctx=canvas.getContext("2d");
-canvas.width=canvas.offsetWidth; canvas.height=150;
+canvas.width=canvas.offsetWidth;
+canvas.height=150;
 let draw=false;
-function pos(e){const r=canvas.getBoundingClientRect();return e.touches?{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top}:{x:e.clientX-r.left,y:e.clientY-r.top};}
-["mousedown","touchstart"].forEach(ev=>canvas.addEventListener(ev,e=>{e.preventDefault();draw=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);}));
-["mousemove","touchmove"].forEach(ev=>canvas.addEventListener(ev,e=>{if(!draw)return;e.preventDefault();const p=pos(e);ctx.lineWidth=2;ctx.lineCap="round";ctx.lineTo(p.x,p.y);ctx.stroke();}));
-["mouseup","touchend","mouseleave"].forEach(ev=>canvas.addEventListener(ev,()=>{draw=false;ctx.beginPath();}));
+canvas.onmousedown=e=>{draw=true;ctx.beginPath();ctx.moveTo(e.offsetX,e.offsetY);}
+canvas.onmousemove=e=>{if(draw){ctx.lineTo(e.offsetX,e.offsetY);ctx.stroke();}}
+canvas.onmouseup=()=>draw=false;
 
-/* FÁJLNÉV */
-function clean(str){return str.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"_");}
+function clean(s){return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"_");}
 
 pdfBtn.onclick=async()=>{
- if(!ugyfelEmail.value){alert("Email kötelező");return;}
- const fileName=`${ds}_${clean(cim.value)}.pdf`;
- const pdfBlob=await html2pdf().from(doc).set({
-  margin:10,
-  html2canvas:{scale:window.innerWidth<768?0.65:0.85},
-  jsPDF:{unit:"mm",format:"a4"}
+ if(!ugyfelEmail.value)return alert("Email kell");
+ const fileName=`${clean(cim.value||"cim")}_${ds}.pdf`;
+
+ const pdf=await html2pdf().from(doc).set({
+   html2canvas:{scale:0.85},
+   jsPDF:{unit:"mm",format:"a4"}
  }).outputPdf("blob");
 
  const fd=new FormData();
- fd.append("pdf",pdfBlob,fileName);
+ fd.append("pdf",pdf,fileName);
  fd.append("ugyfelEmail",ugyfelEmail.value);
  fd.append("gazdaNev",gazdaNev.value);
  fd.append("cim",cim.value);
 
- await fetch("/send-pdf",{method:"POST",body:fd});
- alert("PDF elküldve");
+ await fetch("https://SAJAT-SERVICE-NEV.onrender.com/send-pdf",{
+   method:"POST",
+   body:fd
+ });
+
+ alert("Elküldve");
 };
 </script>
 
