@@ -225,33 +225,7 @@ let c=localStorage.getItem("erk")||0;
 localStorage.setItem("erk",++c);
 erkszam.innerText=`${ds}-${String(c).padStart(4,"0")}`;
 
-document.querySelectorAll(".implant").forEach(cb=>{
-  cb.onchange=()=>document.querySelectorAll(".implant").forEach(o=>o!==cb&&(o.checked=false));
-});
 
-const canvas=document.getElementById("signUser");
-const ctx=canvas.getContext("2d");
-canvas.width=canvas.offsetWidth; canvas.height=150;
-let draw=false;
-function pos(e){const r=canvas.getBoundingClientRect();return e.touches?{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top}:{x:e.clientX-r.left,y:e.clientY-r.top};}
-["mousedown","touchstart"].forEach(ev=>canvas.addEventListener(ev,e=>{e.preventDefault();draw=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);}));
-["mousemove","touchmove"].forEach(ev=>canvas.addEventListener(ev,e=>{if(!draw)return;e.preventDefault();const p=pos(e);ctx.lineWidth=2;ctx.lineCap="round";ctx.lineTo(p.x,p.y);ctx.stroke();}));
-["mouseup","touchend","mouseleave"].forEach(ev=>canvas.addEventListener(ev,()=>{draw=false;ctx.beginPath();}));
-
-function cleanFileName(s){return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"_");}
-
-pdfBtn.onclick=async()=>{
-  const fn=`azonosito_lap_${ds}_${cleanFileName(cim.value)}.pdf`;
-  const blob=await html2pdf().from(doc).set({margin:10,html2canvas:{scale:0.85},jsPDF:{unit:"mm",format:"a4"}}).outputPdf("blob");
-  const fd=new FormData();
-  fd.append("pdf",blob,fn);
-  fd.append("ugyfelEmail",ugyfelEmail.value);
-  fd.append("gazdaNev",gazdaNev.value);
-  fd.append("cim",cim.value);
-  await fetch("/send-pdf",{method:"POST",body:fd});
-  alert("PDF elküldve!");
-};
-</script>
 
 </body>
 </html>
