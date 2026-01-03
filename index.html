@@ -46,7 +46,9 @@ button { margin-top:25px; padding:14px; width:100%; font-size:16px; cursor:point
 <input type="tel">
 
 <label>Megbízott</label>
-<input type="text" value="Budai Tamás e.v." readonly>
+<input type="text"
+value="Budai Tamás e.v. | Adószám: 69528279-1-43 | Nyilvántartási szám: 53314194"
+readonly>
 
 <label>Állat adatai</label>
 <select id="allatFajta">
@@ -87,6 +89,17 @@ button { margin-top:25px; padding:14px; width:100%; font-size:16px; cursor:point
   </div>
 </div>
 
+<label>
+Az állat testében található-e bármilyen implantátum
+(pl. chipen kívüli fém, orvosi eszköz)?
+</label>
+<div class="checkbox">
+  <label><input type="checkbox" class="implant"> Igen</label>
+</div>
+<div class="checkbox">
+  <label><input type="checkbox" class="implant"> Nem</label>
+</div>
+
 <label>Milyen urna?</label>
 <input type="text">
 
@@ -97,8 +110,12 @@ button { margin-top:25px; padding:14px; width:100%; font-size:16px; cursor:point
 </select>
 
 <label>Fizetés módja</label>
-<div class="checkbox"><label><input type="checkbox"> Készpénz</label></div>
-<div class="checkbox"><label><input type="checkbox"> Átutalás (egy összegben)</label></div>
+<div class="checkbox">
+  <label><input type="checkbox"> Készpénz</label>
+</div>
+<div class="checkbox">
+  <label><input type="checkbox"> Átutalás (egy összegben)</label>
+</div>
 
 <label>Elszállításnál fizetett összeg (Ft)</label>
 <input type="number">
@@ -130,6 +147,12 @@ erkszam.innerText = ds + "-" + String(c).padStart(4,"0");
 allatFajta.onchange = e => {
   egyebAllat.style.display = e.target.value==="Egyéb" ? "block" : "none";
 };
+
+document.querySelectorAll(".implant").forEach(cb=>{
+  cb.onchange = ()=>document.querySelectorAll(".implant").forEach(o=>{
+    if(o!==cb) o.checked=false;
+  });
+});
 
 const canvas = document.getElementById("signUser");
 const ctx = canvas.getContext("2d");
