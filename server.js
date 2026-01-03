@@ -23,7 +23,7 @@ app.post("/send-pdf", upload.single("pdf"), async (req, res) => {
       service: "gmail",
       auth: {
         user: "azonisitolap@gmail.com",
-        pass: "danv uwul sqyy mpid"
+        pass: "danvuwulsqyympid"
       }
     });
 
