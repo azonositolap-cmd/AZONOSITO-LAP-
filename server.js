@@ -3,6 +3,7 @@ const cors = require("cors");
 const multer = require("multer");
 const PDFDocument = require("pdfkit");
 const nodemailer = require("nodemailer");
+const path = require("path");
 
 const app = express();
 const upload = multer();
@@ -10,9 +11,7 @@ const upload = multer();
 app.use(cors());
 app.use(express.static(__dirname));
 
-/* =========================
-   EMAIL BEÁLLÍTÁS (GMAIL)
-   ========================= */
+/* ========= GMAIL SMTP ========= */
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -21,15 +20,18 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-/* =========================
-   TESZT EMAIL
-   ========================= */
+/* ========= FŐOLDAL ========= */
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+
+/* ========= TESZT EMAIL ========= */
 app.get("/test-email", async (req, res) => {
   try {
     await transporter.sendMail({
       from: `"Azonosító lap" <${process.env.GMAIL_USER}>`,
       to: process.env.GMAIL_USER,
-      subject: "TESZT EMAIL",
+      subject: "Teszt email",
       text: "Ha ezt megkaptad, az email küldés működik."
     });
 
@@ -40,22 +42,19 @@ app.get("/test-email", async (req, res) => {
   }
 });
 
-/* =========================
-   ŰRLAP → PDF → EMAIL
-   ========================= */
-app.post("/send-pdf", upload.none(), async (req, res) => {
+/* ========= ŰRLAP → PDF → EMAIL ========= */
+app.post("/send-pdf", upload.any(), async (req, res) => {
   try {
     const { ugyfelEmail, gazdaNev = "", cim = "" } = req.body;
 
     if (!ugyfelEmail) {
-      return res.status(400).send("Hiányzó email cím");
+      return res.status(400).send("Hiányzó email");
     }
 
-    // PDF létrehozás
     const doc = new PDFDocument({ size: "A4", margin: 40 });
-    const buffers = [];
-    doc.on("data", buffers.push.bind(buffers));
+    let buffers = [];
 
+    doc.on("data", buffers.push.bind(buffers));
     doc.on("end", async () => {
       const pdfBuffer = Buffer.concat(buffers);
 
@@ -72,27 +71,22 @@ app.post("/send-pdf", upload.none(), async (req, res) => {
         ]
       });
 
-      res.send("PDF elküldve emailben");
+      res.send("PDF elkészült és elküldve");
     });
 
     doc.fontSize(18).text("AZONOSÍTÓ LAP", { align: "center" });
     doc.moveDown();
     doc.text(`Gazda neve: ${gazdaNev}`);
     doc.text(`Cím: ${cim}`);
-    doc.moveDown(2);
-    doc.text("Köszönjük.");
-
     doc.end();
+
   } catch (err) {
     console.error(err);
     res.status(500).send("Szerver hiba");
   }
 });
 
-/* =========================
-   SZERVER INDÍTÁS
-   ========================= */
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("Szerver fut a porton:", PORT);
+  console.log("Szerver fut:", PORT);
 });
