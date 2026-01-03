@@ -1,32 +1,24 @@
 const express = require("express");
 const cors = require("cors");
-const path = require("path");
 const multer = require("multer");
 const nodemailer = require("nodemailer");
 
 const app = express();
-const upload = multer();
+const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(cors());
-app.use(express.static(path.join(__dirname)));
 app.use(express.json());
+app.use(express.static("."));
 
 /* =========================
-   GMAIL EMAIL BEÁLLÍTÁS
+   GMAIL TRANSPORT
    ========================= */
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.GMAIL_USER,      // pl: azonositolap@gmail.com
-    pass: process.env.GMAIL_APP_PASS   // app jelszó (NEM sima gmail jelszó)
+    user: process.env.GMAIL_USER,        // pl: azonositolap@gmail.com
+    pass: process.env.GMAIL_APP_PASSWORD // app jelszó
   }
-});
-
-/* =========================
-   FŐOLDAL
-   ========================= */
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
 });
 
 /* =========================
@@ -37,46 +29,52 @@ app.get("/test-email", async (req, res) => {
     await transporter.sendMail({
       from: `"Azonosító lap" <${process.env.GMAIL_USER}>`,
       to: process.env.GMAIL_USER,
-      subject: "✅ Gmail teszt",
-      text: "Ha ezt megkaptad, a Gmail email küldés működik."
+      subject: "Teszt email – OK",
+      text: "Ha ezt megkaptad, a szerver email küldése működik."
     });
 
     res.send("Teszt email elküldve");
   } catch (err) {
     console.error(err);
-    res.status(500).send("Email hiba");
+    res.status(500).send("Teszt email hiba");
   }
 });
 
 /* =========================
-   ŰRLAP → EMAIL
+   PDF + EMAIL
    ========================= */
-app.post("/send-pdf", upload.any(), async (req, res) => {
+app.post("/send-pdf", upload.single("pdf"), async (req, res) => {
   try {
-    const { ugyfelEmail, gazdaNev = "", cim = "" } = req.body;
+    const { ugyfelEmail } = req.body;
 
-    if (!ugyfelEmail) {
-      return res.status(400).send("Hiányzó email");
+    if (!ugyfelEmail || !req.file) {
+      return res.status(400).send("Hiányzó adat");
     }
 
     await transporter.sendMail({
       from: `"Azonosító lap" <${process.env.GMAIL_USER}>`,
       to: [ugyfelEmail, process.env.GMAIL_USER],
       subject: "Azonosító lap",
-      text: `Gazda neve: ${gazdaNev}\nCím: ${cim}\n\nAz azonosító lap rögzítve.`
+      text: "Csatolva küldjük az azonosító lapot.",
+      attachments: [
+        {
+          filename: req.file.originalname || "azonosito_lap.pdf",
+          content: req.file.buffer
+        }
+      ]
     });
 
-    res.send("Email elküldve");
+    res.send("PDF elküldve emailben");
   } catch (err) {
     console.error(err);
-    res.status(500).send("Szerver hiba");
+    res.status(500).send("Email küldési hiba");
   }
 });
 
 /* =========================
-   INDÍTÁS
+   SERVER START
    ========================= */
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("Szerver fut a porton:", PORT);
+  console.log("Szerver fut porton:", PORT);
 });
