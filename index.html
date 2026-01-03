@@ -24,20 +24,20 @@ body {
 
 h2 {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 
 .top-info {
   display: flex;
   justify-content: space-between;
+  margin-bottom: 25px;
   font-weight: bold;
-  margin-bottom: 20px;
 }
 
 label {
   font-weight: bold;
   display: block;
-  margin-top: 14px;
+  margin-top: 18px;
 }
 
 input, select, textarea, canvas {
@@ -46,12 +46,12 @@ input, select, textarea, canvas {
 }
 
 input, select, textarea {
-  padding: 8px;
-  font-size: 14px;
+  padding: 10px;
+  font-size: 15px;
 }
 
 textarea {
-  min-height: 80px;
+  min-height: 90px;
 }
 
 .row {
@@ -63,35 +63,38 @@ textarea {
   flex: 1;
 }
 
-/* ✅ CHECKBOX EGY VONALBA */
-.checkline {
+.checkbox-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-top: 10px;
+  gap: 10px;
+  margin-top: 8px;
 }
 
-.checkline input {
-  width: auto;
+.checkbox-row input {
   transform: scale(1.2);
-}
-
-/* ✅ PDF NE TÖRJE SZÉT */
-.block {
-  page-break-inside: avoid;
 }
 
 canvas {
   border: 1px solid #000;
   height: 150px;
   background: #fff;
+  touch-action: none;
+}
+
+.signature-block {
+  margin-top: 15px;
 }
 
 button {
-  margin-top: 25px;
+  margin-top: 30px;
   padding: 14px;
   width: 100%;
   font-size: 16px;
+  cursor: pointer;
+}
+
+.pdf-space {
+  margin-top: 12px;
 }
 </style>
 
@@ -99,7 +102,7 @@ button {
 </head>
 
 <body>
-<div class="container block" id="doc">
+<div class="container" id="doc">
 
 <h2>Azonosító lap</h2>
 
@@ -109,38 +112,44 @@ button {
 </div>
 
 <label>Megbízó neve</label>
-<input id="gazdaNev">
+<input id="gazdaNev" type="text">
 
 <label>Cím</label>
-<input id="cim">
+<input id="cim" type="text">
 
 <label>Telefonszám</label>
-<input>
+<input type="tel">
 
 <label>Megbízott</label>
-<input value="Budai Tamás e.v. | Adószám: 69528279143 | Nyilvántartási szám: 53314194" readonly>
+<input type="text" value="Budai Tamás e.v. | Adószám: 69528279143 | Nyilvántartási szám: 53314194" readonly>
 
-<label>Állat fajtája</label>
+<label>Állat adatai</label>
 <select id="allatFajta">
+  <option value="">Válasszon</option>
   <option>Kutya</option>
   <option>Macska</option>
   <option>Egyéb</option>
 </select>
 
-<div class="row block">
+<div id="egyebAllat" style="display:none;">
+  <label>Milyen állat?</label>
+  <input type="text">
+</div>
+
+<div class="row">
   <div>
-    <label>Állat neve</label>
-    <input>
+    <label>Név</label>
+    <input type="text">
   </div>
   <div>
     <label>Chip szám</label>
-    <input>
+    <input type="text">
   </div>
 </div>
 
-<div class="row block">
+<div class="row">
   <div>
-    <label>Neme</label>
+    <label>Állat neme</label>
     <select>
       <option>Hím</option>
       <option>Nőstény</option>
@@ -153,12 +162,12 @@ button {
   </div>
 </div>
 
-<label>Implantátum található?</label>
-<div class="checkline"><span>Igen</span><input type="checkbox"></div>
-<div class="checkline"><span>Nem</span><input type="checkbox"></div>
+<label>Az állat testében található-e bármilyen implantátum?</label>
+<div class="checkbox-row"><input type="checkbox" class="implant"> Igen</div>
+<div class="checkbox-row"><input type="checkbox" class="implant"> Nem</div>
 
-<label>Urna típusa</label>
-<input>
+<label>Milyen urna?</label>
+<input type="text">
 
 <label>Urna állapota</label>
 <select>
@@ -167,23 +176,25 @@ button {
 </select>
 
 <label>Fizetés módja</label>
-<div class="checkline"><span>Készpénz</span><input type="checkbox"></div>
-<div class="checkline"><span>Átutalás (egy összegben)</span><input type="checkbox"></div>
+<div class="checkbox-row"><input type="checkbox"> Készpénz</div>
+<div class="checkbox-row"><input type="checkbox"> Átutalás (egy összegben)</div>
 
-<label>Elszállításnál fizetett összeg (Ft)</label>
-<input type="number">
+<div class="pdf-space">
+  <label>Elszállításnál fizetett összeg (Ft)</label>
+  <input type="number">
+</div>
 
 <label>Visszaszállításnál fizetendő összeg (Ft)</label>
 <input type="number">
 
-<div class="checkline">
-  <span>Átvett pokróc, nyakörv stb. megsemmisítésre kerül</span>
+<div class="checkbox-row">
   <input type="checkbox">
+  Tisztelt Gazdi! A kisállattal együtt átvett pokróc, nyakörv stb. megsemmisítésre kerül.
 </div>
 
-<div class="checkline">
-  <span>Hozzájárulok személyes adataim kezeléséhez</span>
-  <input type="checkbox">
+<div class="checkbox-row">
+  <input type="checkbox" required>
+  Hozzájárulok személyes adataim kezeléséhez
 </div>
 
 <label>Megjegyzés</label>
@@ -193,42 +204,82 @@ button {
 <canvas id="signUser"></canvas>
 
 <label>Ügyfél email címe</label>
-<input id="ugyfelEmail" type="email">
+<input type="email" id="ugyfelEmail" required>
 
 <button id="pdfBtn">PDF készítés és küldés</button>
 
 </div>
 
 <script>
-// dátum
+// DÁTUM + ÉRKEZTETÉS
 const d = new Date();
-const ds = d.toISOString().slice(0,10);
-datum.innerText = ds.replaceAll("-",".");
-
+const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+datum.innerText = ds.replaceAll("-", ".");
 let c = localStorage.getItem("erk") || 0;
 localStorage.setItem("erk", ++c);
-erkszam.innerText = ds + "-" + String(c).padStart(4,"0");
+erkszam.innerText = `${ds}-${String(c).padStart(4,"0")}`;
 
-// PDF
+// EGYÉB ÁLLAT
+allatFajta.onchange = e => {
+  egyebAllat.style.display = e.target.value === "Egyéb" ? "block" : "none";
+};
+
+// IMPLANT kizárás
+document.querySelectorAll(".implant").forEach(cb=>{
+  cb.onchange = ()=>document.querySelectorAll(".implant").forEach(o=>{
+    if(o!==cb) o.checked=false;
+  });
+});
+
+// ALÁÍRÁS
+const canvas = document.getElementById("signUser");
+const ctx = canvas.getContext("2d");
+canvas.width = canvas.offsetWidth;
+canvas.height = 150;
+let draw = false;
+
+function pos(e){
+  const r = canvas.getBoundingClientRect();
+  return e.touches
+    ? {x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top}
+    : {x:e.clientX-r.left,y:e.clientY-r.top};
+}
+
+["mousedown","touchstart"].forEach(ev=>canvas.addEventListener(ev,e=>{
+  e.preventDefault(); draw=true;
+  const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y);
+}));
+["mousemove","touchmove"].forEach(ev=>canvas.addEventListener(ev,e=>{
+  if(!draw)return; e.preventDefault();
+  const p=pos(e); ctx.lineWidth=2; ctx.lineCap="round";
+  ctx.lineTo(p.x,p.y); ctx.stroke();
+}));
+["mouseup","touchend","mouseleave"].forEach(ev=>canvas.addEventListener(ev,()=>{
+  draw=false; ctx.beginPath();
+}));
+
+function cleanFileName(str){
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"_");
+}
+
 pdfBtn.onclick = async () => {
-  const cimText = document.getElementById("cim").value || "cim_nelkul";
-  const fileName = `azonosito_lap_${ds}_${cimText.replace(/\s+/g,"_")}.pdf`;
+  const cimText = cim.value || "cim";
+  const fileName = `azonosito_lap_${ds}_${cleanFileName(cimText)}.pdf`;
 
-  const pdfBlob = await html2pdf()
-    .from(document.getElementById("doc"))
-    .set({
-      margin: 10,
-      html2canvas: { scale: 0.9, scrollY: 0 },
-      jsPDF: { format: "a4" }
-    })
-    .outputPdf("blob");
+  const pdfBlob = await html2pdf().from(doc).set({
+    margin: 10,
+    html2canvas: { scale: 0.85, scrollY: 0 },
+    jsPDF: { unit: "mm", format: "a4" }
+  }).outputPdf("blob");
 
   const fd = new FormData();
   fd.append("pdf", pdfBlob, fileName);
   fd.append("ugyfelEmail", ugyfelEmail.value);
+  fd.append("gazdaNev", gazdaNev.value);
+  fd.append("cim", cim.value);
 
-  await fetch("/send-pdf", { method: "POST", body: fd });
-  alert("PDF elküldve");
+  await fetch("/send-pdf", { method:"POST", body:fd });
+  alert("PDF elküldve!");
 };
 </script>
 
