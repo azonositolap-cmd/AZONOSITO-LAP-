@@ -7,6 +7,9 @@ const path = require("path");
 const app = express();
 const upload = multer();
 
+// =====================
+// MIDDLEWARE
+// =====================
 app.use(cors());
 app.use(express.static(__dirname));
 
@@ -48,38 +51,48 @@ app.get("/test-email", async (req, res) => {
 });
 
 // =====================
-// PDF KÜLDÉS
+// PDF + HTML EMAIL KÜLDÉS
 // =====================
 app.post("/send-pdf", upload.single("pdf"), async (req, res) => {
   try {
-    const { ugyfelEmail } = req.body;
+    const { ugyfelEmail, email_html } = req.body;
 
-    if (!ugyfelEmail || !req.file) {
+    if (!ugyfelEmail || !email_html || !req.file) {
       return res.status(400).send("Hiányzó adat");
     }
 
     await transporter.sendMail({
       from: `"Azonosító lap" <${process.env.GMAIL_USER}>`,
-      to: [ugyfelEmail, process.env.GMAIL_USER],
-      subject: "Azonosító lap",
-      text: "Csatolva küldjük az azonosító lapot.",
+      to: ugyfelEmail,
+      bcc: process.env.GMAIL_USER,
+
+      subject: "Azonosító lap – visszaigazolás",
+
+      text: "Csatolva küldjük az azonosító lapot PDF formátumban.",
+
+      // 👉 EMAIL TÖRZS = KITÖLTÖTT HTML
+      html: email_html,
+
       attachments: [
         {
           filename: req.file.originalname,
-          content: req.file.buffer
+          content: req.file.buffer,
+          contentType: "application/pdf"
         }
       ]
     });
 
     res.send("Email elküldve");
   } catch (err) {
-    console.error("PDF EMAIL HIBA:", err);
+    console.error("EMAIL KÜLDÉSI HIBA:", err);
     res.status(500).send("Email küldési hiba");
   }
 });
 
 // =====================
+// SERVER INDÍTÁS
+// =====================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("Szerver fut:", PORT);
+  console.log("✅ Szerver fut a következő porton:", PORT);
 });
