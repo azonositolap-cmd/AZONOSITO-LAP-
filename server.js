@@ -51,13 +51,13 @@ app.get("/test-email", async (req, res) => {
 });
 
 // =====================
-// PDF + HTML EMAIL KÜLDÉS
+// PDF EMAIL KÜLDÉS (CSAK PDF)
 // =====================
 app.post("/send-pdf", upload.single("pdf"), async (req, res) => {
   try {
-    const { ugyfelEmail, email_html } = req.body;
+    const { ugyfelEmail } = req.body;
 
-    if (!ugyfelEmail || !email_html || !req.file) {
+    if (!ugyfelEmail || !req.file) {
       return res.status(400).send("Hiányzó adat");
     }
 
@@ -66,13 +66,23 @@ app.post("/send-pdf", upload.single("pdf"), async (req, res) => {
       to: ugyfelEmail,
       bcc: process.env.GMAIL_USER,
 
-      subject: "Azonosító lap – visszaigazolás",
+      subject: "Azonosító lap – PDF",
 
-      text: "Csatolva küldjük az azonosító lapot PDF formátumban.",
+      // ===== EMAIL SZÖVEG =====
+      text: `Tisztelt Gazdi!
 
-      // 👉 EMAIL TÖRZS = KITÖLTÖTT HTML
-      html: email_html,
+Köszönjük, hogy minket választott ebben a nehéz időszakban.
+Őszinte részvétünket fejezzük ki kisállata elvesztése miatt.
 
+Mellékelten küldjük az azonosító lapot PDF formátumban.
+
+Amennyiben bármilyen kérdése merülne fel, vagy további segítségre lenne szüksége,
+forduljon hozzánk bizalommal.
+
+Üdvözlettel:
+Budai Tamás`,
+
+      // ===== PDF CSATOLMÁNY =====
       attachments: [
         {
           filename: req.file.originalname,
