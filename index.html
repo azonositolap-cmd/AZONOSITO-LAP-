@@ -96,11 +96,16 @@ button {
   cursor: pointer;
 }
 
-/* ===== PDF TÖRDELÉS JAVÍTÁS – TARTALOM NEM VÁLTOZIK ===== */
+/* ===== PDF TÖRDELÉS – STABIL VÉGLEGES ===== */
 @media print {
   #doc {
     page-break-inside: avoid;
   }
+}
+
+/* ===== FIZETÉS MÓDJA BLOKK LEJJEBB ===== */
+.payment-section {
+  margin-top: 40px;
 }
 </style>
 
@@ -182,7 +187,8 @@ value="Budai Tamás e.v. | Adószám: 69528279-1-43 | Nyilvántartási szám: 53
   <option>Nem ragasztva</option>
 </select>
 
-<label>Fizetés módja</label>
+<!-- ⬇⬇⬇ EZ A KRITIKUS RÉSZ – CSAK OSZTÁLY KERÜLT RÁ ⬇⬇⬇ -->
+<label class="payment-section">Fizetés módja</label>
 <div class="checkbox"><span>Készpénz</span><input type="checkbox"></div>
 <div class="checkbox"><span>Átutalás (egy összegben)</span><input type="checkbox"></div>
 
@@ -270,7 +276,7 @@ function clean(str){
     .replace(/[^a-z0-9]+/gi,"_");
 }
 
-/* ===== PDF GENERÁLÁS – JAVÍTOTT TÖRDELÉS ===== */
+/* PDF GENERÁLÁS – STABIL */
 pdfBtn.onclick = async () => {
   if (!ugyfelEmail.value) return alert("Email kötelező");
 
